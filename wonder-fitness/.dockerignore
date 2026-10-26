@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.local
+*.log
+README.md
+HUONG_DAN_SU_DUNG.md

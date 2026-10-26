@@ -1,0 +1,47 @@
+name: wonder-fitness
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: wonder-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wonder
+      POSTGRES_PASSWORD: wonder_secret
+      POSTGRES_DB: wonder_fitness
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5432:5432"
+    volumes:
+      - wonder_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wonder -d wonder_fitness"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wonder-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://wonder:wonder_secret@db:5432/wonder_fitness?schema=public"
+      AUTH_SECRET: "wonder-fitness-demo-secret-change-me-32chars"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      SEED_DB: "true"
+      TZ: Asia/Ho_Chi_Minh
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: "465"
+      SMTP_USER: "wonderfitnessgymcenter@gmail.com"
+      SMTP_PASS: "hikjtzcizucmqkmd"
+      MAIL_FROM: "Wonder Fitness <wonderfitnessgymcenter@gmail.com>"
+    ports:
+      - "3000:3000"
+
+volumes:
+  wonder_pgdata:

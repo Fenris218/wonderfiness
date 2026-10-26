@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserAccount {
+  userId          Int       @id @default(autoincrement())
+  phone           String?   @unique
+  email           String?   @unique
+  emailVerifiedAt DateTime? @db.Timestamptz(3)
+  passwordHash    String
+  role            String    @default("CUSTOMER") // CUSTOMER | STAFF | ADMIN
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  customer        Customer?
+  staff           Staff?
+  otpCodes        OtpCode[]
+
+  @@map("user_account")
+}
+
+model OtpCode {
+  otpId      Int          @id @default(autoincrement())
+  userId     Int
+  user       UserAccount  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  email      String
+  purpose    String // VERIFY_EMAIL | RESET_PASSWORD
+  codeHash   String
+  expiresAt  DateTime     @db.Timestamptz(3)
+  attempts   Int          @default(0)
+  consumedAt DateTime?    @db.Timestamptz(3)
+  createdAt  DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, purpose, createdAt(sort: Desc)])
+  @@map("otp_code")
+}
+
+model Customer {
+  customerId     Int                 @id @default(autoincrement())
+  userId         Int                 @unique
+  user           UserAccount         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  fullName       String
+  gender         String?
+  dateOfBirth    DateTime?           @db.Date
+  consentAt      DateTime            @default(now()) @db.Timestamptz(3)
+  consentVersion String              @default("2026-01")
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  memberships    Membership[]
+  orders         RegistrationOrder[]
+  leads          Lead[]
+
+  @@map("customer")
+}
+
+model Staff {
+  staffId   Int          @id @default(autoincrement())
+  userId    Int          @unique
+  user      UserAccount  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  branchId  Int
+  branch    Branch       @relation(fields: [branchId], references: [branchId])
+  fullName  String
+  createdAt DateTime     @default(now()) @db.Timestamptz(3)
+  leads     Lead[]
+  contacts  ContactLog[]
+
+  @@map("staff")
+}
+
+model Branch {
+  branchId    Int                 @id @default(autoincrement())
+  branchName  String              @unique
+  address     String
+  district    String
+  phone       String?
+  openingTime String              @default("05:30")
+  closingTime String              @default("21:30")
+  mapUrl      String?
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  staff       Staff[]
+  trainers    Trainer[]
+  orders      RegistrationOrder[]
+  checkIns    CheckIn[]
+  leads       Lead[]
+
+  @@map("branch")
+}
+
+model Package {
+  packageId      Int                 @id @default(autoincrement())
+  packageName    String
+  packageType    String // GYM | PT | YOGA | ZUMBA
+  durationMonths Int
+  bonusMonths    Int                 @default(0)
+  sessionCount   Int?
+  price          Int
+  benefits       String
+  isPopular      Boolean             @default(false)
+  isActive       Boolean             @default(true)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  orders         RegistrationOrder[]
+
+  @@map("package")
+}
+
+model Trainer {
+  trainerId      Int                 @id @default(autoincrement())
+  fullName       String
+  branchId       Int
+  branch         Branch              @relation(fields: [branchId], references: [branchId])
+  specialization String
+  certificates   String?
+  bio            String?
+  photoUrl       String?
+  rating         Float               @default(5)
+  experience     Int                 @default(1)
+  isActive       Boolean             @default(true)
+  orders         RegistrationOrder[]
+
+  @@map("trainer")
+}
+
+model Lead {
+  leadId           Int          @id @default(autoincrement())
+  customerId       Int?
+  customer         Customer?    @relation(fields: [customerId], references: [customerId])
+  branchId         Int
+  branch           Branch       @relation(fields: [branchId], references: [branchId])
+  assignedStaffId  Int?
+  assignedStaff    Staff?       @relation(fields: [assignedStaffId], references: [staffId])
+  fullName         String
+  phone            String
+  email            String?
+  serviceInterest  String       @default("GYM") // GYM | PT | BOTH
+  preferredChannel String       @default("ZALO") // ZALO | SMS | EMAIL
+  preferredTime    String?
+  budgetMax        Int?
+  leadStatus       String       @default("NEW") // NEW | ASSIGNED | CONTACTED | CONVERTED | LOST
+  lockStatus       String       @default("UNLOCKED") // UNLOCKED | LOCKED
+  lockedAt         DateTime?    @db.Timestamptz(3)
+  consentAt        DateTime     @default(now()) @db.Timestamptz(3)
+  createdAt        DateTime     @default(now()) @db.Timestamptz(3)
+  contacts         ContactLog[]
+
+  @@index([branchId, leadStatus, createdAt(sort: Desc)])
+  @@index([assignedStaffId])
+  @@map("lead")
+}
+
+model ContactLog {
+  contactId    Int         @id @default(autoincrement())
+  leadId       Int?
+  lead         Lead?       @relation(fields: [leadId], references: [leadId], onDelete: Cascade)
+  membershipId Int?
+  membership   Membership? @relation(fields: [membershipId], references: [membershipId], onDelete: Cascade)
+  staffId      Int
+  staff        Staff       @relation(fields: [staffId], references: [staffId])
+  contactTime  DateTime    @default(now()) @db.Timestamptz(3)
+  channel      String      @default("PHONE") // PHONE | ZALO | SMS | EMAIL | IN_PERSON
+  content      String
+  outcome      String      @default("INTERESTED") // NO_ANSWER | INTERESTED | SCHEDULED | DECLINED
+  createdAt    DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@index([leadId])
+  @@index([membershipId])
+  @@map("contact_log")
+}
+
+model RegistrationOrder {
+  orderId            Int        @id @default(autoincrement())
+  orderCode          String     @unique
+  customerId         Int
+  customer           Customer   @relation(fields: [customerId], references: [customerId])
+  branchId           Int
+  branch             Branch     @relation(fields: [branchId], references: [branchId])
+  packageId          Int
+  package            Package    @relation(fields: [packageId], references: [packageId])
+  trainerId          Int?
+  trainer            Trainer?   @relation(fields: [trainerId], references: [trainerId])
+  orderType          String     @default("NEW") // NEW | RENEWAL
+  paymentOption      String     @default("ONLINE") // ONLINE | AT_COUNTER
+  orderStatus        String     @default("PENDING") // PENDING | PAID | CANCELLED
+  totalAmount        Int
+  requestedStartDate DateTime   @db.Date
+  createdAt          DateTime   @default(now()) @db.Timestamptz(3)
+  paidAt             DateTime?  @db.Timestamptz(3)
+  payments           Payment[]
+  membership         Membership?
+
+  @@index([customerId])
+  @@index([branchId, createdAt(sort: Desc)])
+  @@map("registration_order")
+}
+
+model Payment {
+  paymentId     Int               @id @default(autoincrement())
+  orderId       Int
+  order         RegistrationOrder @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  paymentMethod String            @default("MOCK") // MOCK | VNPAY | MOMO | VIETQR | CASH
+  amount        Int
+  paymentStatus String            @default("PENDING") // PENDING | SUCCESS | FAILED
+  txnRef        String?           @unique
+  paidAt        DateTime?         @db.Timestamptz(3)
+  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
+
+  @@index([orderId])
+  @@map("payment")
+}
+
+model Membership {
+  membershipId    Int              @id @default(autoincrement())
+  customerId      Int
+  customer        Customer         @relation(fields: [customerId], references: [customerId])
+  orderId         Int              @unique
+  order           RegistrationOrder @relation(fields: [orderId], references: [orderId])
+  memberCode      String           @unique
+  qrSecret        String           @unique
+  startDate       DateTime         @db.Date
+  endDate         DateTime         @db.Date
+  ptSessionsTotal Int?
+  ptSessionsLeft  Int?
+  status          String           @default("ACTIVE") // ACTIVE | EXPIRED | FROZEN
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  checkIns        CheckIn[]
+  contacts        ContactLog[]
+
+  @@index([customerId])
+  @@index([endDate])
+  @@map("membership")
+}
+
+model CheckIn {
+  checkinId    Int        @id @default(autoincrement())
+  membershipId Int
+  membership   Membership @relation(fields: [membershipId], references: [membershipId])
+  branchId     Int
+  branch       Branch     @relation(fields: [branchId], references: [branchId])
+  checkinTime  DateTime   @default(now()) @db.Timestamptz(3)
+  checkinType  String     @default("GYM") // GYM | PT
+  result       String     @default("VALID") // VALID | EXPIRED | INVALID
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+
+  @@index([branchId, checkinTime(sort: Desc)])
+  @@map("check_in")
+}
