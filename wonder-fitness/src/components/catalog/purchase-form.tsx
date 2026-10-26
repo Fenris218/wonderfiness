@@ -7,37 +7,63 @@ import { Button } from "@/components/ui/button";
 import { formatVND } from "@/lib/format";
 
 type Branch = { branchId: number; branchName: string; address: string };
-type Trainer = { trainerId: number; fullName: string; branchId: number; specialization: string };
+type Trainer = {
+  trainerId: number;
+  fullName: string;
+  branchId: number;
+  specialization: string;
+  pricePerSession: number;
+};
 
 export function PurchaseForm({
   packageId,
   packageType,
   price,
+  sessionCount,
   branches,
   trainers,
+  initialTrainerId = null,
   isLoggedIn,
   nextPath,
 }: {
   packageId: number;
   packageType: string;
   price: number;
+  sessionCount: number | null;
   branches: Branch[];
   trainers: Trainer[];
+  initialTrainerId?: number | null;
   isLoggedIn: boolean;
   nextPath: string;
 }) {
   const router = useRouter();
-  const [branchId, setBranchId] = useState(branches[0]?.branchId ?? 0);
-  const [trainerId, setTrainerId] = useState<number | null>(null);
+  const initialTrainer = trainers.find((t) => t.trainerId === initialTrainerId) ?? null;
+  const [branchId, setBranchId] = useState(initialTrainer?.branchId ?? branches[0]?.branchId ?? 0);
+  const [trainerId, setTrainerId] = useState<number | null>(initialTrainer?.trainerId ?? null);
   const [paymentOption, setPaymentOption] = useState<"ONLINE" | "AT_COUNTER">("ONLINE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isPt = packageType === "PT";
   const branchTrainers = trainers.filter((t) => t.branchId === branchId);
+  const selectedTrainer = branchTrainers.find((t) => t.trainerId === trainerId) ?? null;
+  const sessions = sessionCount ?? 1;
+  const total = isPt ? (selectedTrainer ? selectedTrainer.pricePerSession * sessions : 0) : price;
+
+  function changeBranch(nextBranchId: number) {
+    setBranchId(nextBranchId);
+    if (trainerId && !trainers.some((t) => t.trainerId === trainerId && t.branchId === nextBranchId)) {
+      setTrainerId(null);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (isPt && !selectedTrainer) {
+      setError("Vui lòng chọn huấn luyện viên cho gói PT.");
+      return;
+    }
     if (!isLoggedIn) {
       router.push(`/dang-nhap?next=${encodeURIComponent(nextPath)}`);
       return;
@@ -47,7 +73,7 @@ export function PurchaseForm({
       const res = await fetch("/api/v1/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId, branchId, trainerId, paymentOption }),
+        body: JSON.stringify({ packageId, branchId, trainerId: isPt ? trainerId : null, paymentOption }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -68,7 +94,7 @@ export function PurchaseForm({
     <form onSubmit={submit} className="card space-y-5 p-6">
       <div>
         <p className="label">Chi nhánh tập luyện</p>
-        <select className="input" value={branchId} onChange={(e) => setBranchId(Number(e.target.value))}>
+        <select className="input" value={branchId} onChange={(e) => changeBranch(Number(e.target.value))}>
           {branches.map((b) => (
             <option key={b.branchId} value={b.branchId}>
               {b.branchName} — {b.address}
@@ -77,21 +103,27 @@ export function PurchaseForm({
         </select>
       </div>
 
-      {packageType === "PT" ? (
+      {isPt ? (
         <div>
-          <p className="label">Chọn huấn luyện viên (tuỳ chọn)</p>
+          <p className="label">Chọn huấn luyện viên (bắt buộc)</p>
           <select
             className="input"
             value={trainerId ?? ""}
             onChange={(e) => setTrainerId(e.target.value ? Number(e.target.value) : null)}
+            required
           >
-            <option value="">Để Wonder sắp xếp HLV phù hợp</option>
+            <option value="">Chọn HLV để xem giá</option>
             {branchTrainers.map((t) => (
               <option key={t.trainerId} value={t.trainerId}>
-                {t.fullName} · {t.specialization}
+                {t.fullName} · {t.specialization} · {formatVND(t.pricePerSession)}/buổi
               </option>
             ))}
           </select>
+          {branchTrainers.length === 0 ? (
+            <p className="mt-1.5 text-[12px] text-amber-700">
+              Chi nhánh này chưa có HLV đang hoạt động — vui lòng chọn chi nhánh khác.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -119,15 +151,28 @@ export function PurchaseForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-line pt-4">
-        <div>
-          <p className="text-[11px] uppercase tracking-wide text-ink/45">Tổng thanh toán</p>
-          <p className="text-xl font-extrabold text-ink">{formatVND(price)}</p>
+      <div className="border-t border-line pt-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-wide text-ink/45">Tổng thanh toán</p>
+            <p className="text-xl font-extrabold text-ink">
+              {isPt && !selectedTrainer ? "Chọn HLV" : formatVND(total)}
+            </p>
+            {isPt && selectedTrainer ? (
+              <p className="mt-0.5 text-[11.5px] text-ink/45">
+                {sessions} buổi × {formatVND(selectedTrainer.pricePerSession)} · HLV {selectedTrainer.fullName}
+              </p>
+            ) : null}
+          </div>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={loading || !branchId || (isPt && !selectedTrainer)}
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
+            {isLoggedIn ? "Tạo đơn hàng" : "Đăng nhập để mua"}
+          </Button>
         </div>
-        <Button type="submit" size="lg" disabled={loading || !branchId}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
-          {isLoggedIn ? "Tạo đơn hàng" : "Đăng nhập để mua"}
-        </Button>
       </div>
 
       {error ? (

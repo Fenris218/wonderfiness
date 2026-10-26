@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Dumbbell } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="grid min-h-screen place-items-center bg-surface px-6">
       <div className="max-w-md text-center">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand text-white">
-          <Dumbbell className="h-7 w-7" />
+        <span className="mx-auto grid h-20 w-32 place-items-center rounded-2xl bg-white p-2 ring-1 ring-line">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.jpg" alt="Wonder Fitness" className="h-full w-full object-contain" />
         </span>
         <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.2em] text-brand">Lỗi 404</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-ink">Trang này không tồn tại</h1>

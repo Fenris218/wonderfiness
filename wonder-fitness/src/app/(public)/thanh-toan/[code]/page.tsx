@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, BadgeCheck, CalendarClock, MapPin, Package, Printer, Ticket } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarClock, MapPin, Package, Printer, Ticket, UserRound } from "lucide-react";
 import { getSession } from "@/server/auth";
 import { getOrderByCode } from "@/server/modules/order.service";
 import { formatDate, formatVND } from "@/lib/format";
@@ -59,11 +59,25 @@ export default async function CheckoutPage({ params }: { params: Promise<{ code:
               <div className="flex gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
                 <div>
-                  <p className="text-[11px] text-ink/40">Chi nhánh</p>
+                  <p className="text-[11px] text-ink/40">Chi nhánh mua gói</p>
                   <p className="text-sm font-semibold text-ink">{order.branch.branchName}</p>
                   <p className="mt-0.5 text-[11.5px] text-ink/45">{order.branch.address}</p>
                 </div>
               </div>
+              {order.trainer ? (
+                <div className="flex gap-3">
+                  <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                  <div>
+                    <p className="text-[11px] text-ink/40">Huấn luyện viên</p>
+                    <p className="text-sm font-semibold text-ink">{order.trainer.fullName}</p>
+                    {order.package.packageType === "PT" && order.package.sessionCount ? (
+                      <p className="mt-0.5 text-[11.5px] text-ink/45">
+                        {order.package.sessionCount} buổi × {formatVND(order.trainer.pricePerSession)}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
               <div className="flex gap-3">
                 <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
                 <div>

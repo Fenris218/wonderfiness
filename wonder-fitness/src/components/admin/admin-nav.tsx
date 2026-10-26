@@ -9,25 +9,34 @@ import {
   LayoutDashboard,
   RefreshCw,
   Tags,
+  UserCog,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+type NavItem = { href: string; label: string; icon: LucideIcon; adminOnly?: boolean };
+
+const NAV: NavItem[] = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard },
   { href: "/admin/leads", label: "Khách tiềm năng", icon: ClipboardList },
   { href: "/admin/hoi-vien", label: "Hội viên", icon: Users },
   { href: "/admin/checkin", label: "Check-in QR", icon: CalendarCheck },
   { href: "/admin/gia-han", label: "Gia hạn", icon: RefreshCw },
   { href: "/admin/bao-cao", label: "Báo cáo", icon: BarChart3 },
-  { href: "/admin/danh-muc", label: "Danh mục", icon: Tags },
+  { href: "/admin/danh-muc", label: "Danh mục", icon: Tags, adminOnly: true },
+  { href: "/admin/nhan-vien", label: "Nhân viên", icon: UserCog, adminOnly: true },
 ];
+
+function visibleNav(role: string) {
+  return NAV.filter((item) => !item.adminOnly || role === "ADMIN");
+}
 
 export function AdminNav({ role }: { role: string }) {
   const pathname = usePathname();
   return (
     <nav className="grid gap-1">
-      {NAV.filter((item) => (role === "STAFF" ? item.href !== "/admin/danh-muc" : true)).map((item) => {
+      {visibleNav(role).map((item) => {
         const active = pathname === item.href;
         return (
           <Link
@@ -51,7 +60,7 @@ export function AdminMobileNav({ role }: { role: string }) {
   const pathname = usePathname();
   return (
     <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto border-b border-line bg-white px-4 py-2.5 lg:hidden">
-      {NAV.filter((item) => (role === "STAFF" ? item.href !== "/admin/danh-muc" : true)).map((item) => {
+      {visibleNav(role).map((item) => {
         const active = pathname === item.href;
         return (
           <Link

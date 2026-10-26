@@ -3,9 +3,13 @@ import { AppError } from "@/server/errors";
 import type { Session } from "@/server/auth";
 import type { Prisma } from "@prisma/client";
 import type { z } from "zod";
+import { sendRenewalReminderMail } from "@/server/mail";
+import { daysLeft, formatDate } from "@/lib/format";
 import type { leadSchema, contactSchema, renewRemindSchema } from "@/lib/validation";
 
 export type CreateLeadInput = z.infer<typeof leadSchema> & { customerId?: number };
+
+const USER_SAFE = { userId: true, phone: true, email: true, emailVerifiedAt: true } as const;
 
 export async function createLead(input: CreateLeadInput) {
   const branch = await prisma.branch.findUnique({ where: { branchId: input.branchId } });
@@ -160,7 +164,7 @@ export async function listRenewals(session: Session, days = 10) {
       endDate: { gte: today, lte: until },
     },
     include: {
-      customer: true,
+      customer: { include: { user: { select: USER_SAFE } } },
       order: { include: { package: true, branch: true } },
       contacts: { orderBy: { contactTime: "desc" }, take: 1 },
     },
@@ -181,10 +185,32 @@ export async function remindRenewal(
   if (!session.staffId) throw new AppError("STAFF_ONLY", 403, "Chỉ nhân viên mới gửi nhắc.");
   const membership = await prisma.membership.findUnique({
     where: { membershipId },
-    include: { customer: true, order: { include: { package: true } } },
+    include: {
+      customer: { include: { user: { select: USER_SAFE } } },
+      order: { include: { package: true, branch: true } },
+    },
   });
   if (!membership) throw new AppError("MEMBERSHIP_NOT_FOUND", 404, "Không tìm thấy thẻ.");
   if (membership.status !== "ACTIVE") throw new AppError("MEMBERSHIP_INACTIVE", 422, "Thẻ không ở trạng thái hoạt động.");
+
+  if (input.channel === "EMAIL") {
+    const email = membership.customer.user?.email;
+    if (!email) {
+      throw new AppError("EMAIL_NOT_LINKED", 422, "Hội viên chưa liên kết email để nhận nhắc gia hạn.");
+    }
+    await sendRenewalReminderMail({
+      to: email,
+      name: membership.customer.fullName,
+      packageName: membership.order.package.packageName,
+      endDate: formatDate(membership.endDate),
+      branchName: membership.order.branch.branchName,
+      daysLeft: Math.max(daysLeft(membership.endDate), 0),
+    });
+    await prisma.membership.update({
+      where: { membershipId },
+      data: { reminderEmailSentAt: new Date() },
+    });
+  }
 
   const contact = await prisma.contactLog.create({
     data: {

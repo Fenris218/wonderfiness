@@ -16,7 +16,23 @@ export type PackageCardData = {
   isPopular: boolean;
 };
 
-export function PriceCard({ pkg, compact = false }: { pkg: PackageCardData; compact?: boolean }) {
+export type PriceRange = {
+  min: number;
+  max: number;
+  minPerSession: number;
+  maxPerSession: number;
+  sessions: number | null;
+};
+
+export function PriceCard({
+  pkg,
+  compact = false,
+  priceRange,
+}: {
+  pkg: PackageCardData;
+  compact?: boolean;
+  priceRange?: PriceRange;
+}) {
   const benefits = pkg.benefits.split("|").filter(Boolean);
   const totalMonths = pkg.durationMonths + pkg.bonusMonths;
   const perMonth = Math.round(pkg.price / Math.max(totalMonths, 1));
@@ -43,13 +59,29 @@ export function PriceCard({ pkg, compact = false }: { pkg: PackageCardData; comp
 
       <h3 className="mt-3 text-lg font-bold leading-snug text-ink">{pkg.packageName}</h3>
 
-      <div className="mt-4 flex items-end gap-2">
-        <span className="text-3xl font-extrabold tracking-tight text-ink">{formatVND(pkg.price)}</span>
-      </div>
-      <p className="mt-1 text-xs text-ink/45">
-        ≈ {formatVND(perMonth)}/tháng · {totalMonths} tháng
-        {pkg.sessionCount ? ` · ${pkg.sessionCount} buổi` : ""}
-      </p>
+      {priceRange ? (
+        <>
+          <div className="mt-4">
+            <span className="text-2xl font-extrabold tracking-tight text-ink">
+              {formatVND(priceRange.min)} – {formatVND(priceRange.max)}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-ink/45">
+            {priceRange.sessions ? `${priceRange.sessions} buổi · ` : ""}
+            {formatVND(priceRange.minPerSession)}–{formatVND(priceRange.maxPerSession)}/buổi theo HLV
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-3xl font-extrabold tracking-tight text-ink">{formatVND(pkg.price)}</span>
+          </div>
+          <p className="mt-1 text-xs text-ink/45">
+            ≈ {formatVND(perMonth)}/tháng · {totalMonths} tháng
+            {pkg.sessionCount ? ` · ${pkg.sessionCount} buổi` : ""}
+          </p>
+        </>
+      )}
 
       <ul className={cn("mt-5 grid gap-2.5", compact && "hidden sm:grid")}>
         {benefits.slice(0, 5).map((b) => (

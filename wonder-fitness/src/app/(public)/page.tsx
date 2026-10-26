@@ -201,7 +201,7 @@ export default async function HomePage() {
             title="Chọn cách bạn muốn mạnh hơn"
             description="Mỗi chương trình đều có HLV hướng dẫn, giáo án rõ ràng và lịch tập linh hoạt theo lịch của bạn."
           />
-          <ButtonLink href="/pt" variant="outline" size="sm">
+          <ButtonLink href="/goi-tap?type=PT" variant="outline" size="sm">
             Xem đội ngũ HLV <ChevronRight className="h-4 w-4" />
           </ButtonLink>
         </div>
@@ -302,7 +302,7 @@ export default async function HomePage() {
               title="HLV đồng hành cùng bạn"
               description="Chọn HLV theo chuyên môn và chi nhánh bạn tập. Mỗi HLV đều có lịch trống và đánh giá công khai."
             />
-            <ButtonLink href="/pt" variant="outline" size="sm">
+            <ButtonLink href="/goi-tap?type=PT" variant="outline" size="sm">
               Tất cả HLV <ChevronRight className="h-4 w-4" />
             </ButtonLink>
           </div>

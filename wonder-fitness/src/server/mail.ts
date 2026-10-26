@@ -119,7 +119,7 @@ function otpTemplate(input: { name?: string | null; code: string; purpose: OtpPu
             <tr>
               <td style="background:#f7f8fa;padding:18px 28px;border-top:1px solid #e7eaf0;">
                 <p style="margin:0;font-size:11px;line-height:1.6;color:#9ca3af;">
-                  Wonder Fitness · 5 chi nhánh tại Đà Nẵng · Hotline 0236 3888 100<br />
+                  Wonder Fitness · 5 chi nhánh tại Đà Nẵng · Hotline 0902 797 443<br />
                   Email này được gửi tự động, vui lòng không trả lời.
                 </p>
               </td>
@@ -157,6 +157,122 @@ export async function sendOtpMail(input: {
       "MAIL_SEND_FAILED",
       502,
       "Không gửi được email OTP. Vui lòng kiểm tra lại địa chỉ email và thử lại."
+    );
+  }
+}
+
+function renewalTemplate(input: {
+  name?: string | null;
+  packageName: string;
+  endDate: string;
+  branchName: string;
+  daysLeft: number;
+  renewUrl: string;
+  hotline: string;
+}) {
+  const greeting = input.name ? `Xin chào ${escapeHtml(input.name)},` : "Xin chào,";
+  return `<!doctype html>
+<html lang="vi">
+  <body style="margin:0;padding:0;background:#f7f8fa;font-family:'Be Vietnam Pro',Segoe UI,Arial,sans-serif;color:#0b0f14;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f8fa;padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;border:1px solid #e7eaf0;overflow:hidden;">
+            <tr>
+              <td style="background:#0b0f14;padding:22px 28px;">
+                <span style="display:inline-block;font-size:18px;font-weight:800;letter-spacing:-0.02em;color:#ffffff;">
+                  WONDER<span style="color:#ff4d1c;">.</span> FITNESS
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 28px 8px;">
+                <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">${greeting}</p>
+                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;font-weight:800;color:#0b0f14;">
+                  Gói tập của bạn sắp hết hạn
+                </h1>
+                <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
+                  Gói <strong>${escapeHtml(input.packageName)}</strong> của bạn sẽ hết hạn sau
+                  <strong>${input.daysLeft} ngày</strong> (${escapeHtml(input.endDate)}). Gia hạn sớm để không gián đoạn lịch tập.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 28px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f8fa;border-radius:14px;padding:16px;">
+                  <tr>
+                    <td style="font-size:12px;color:#6b7280;padding-bottom:6px;">Chi nhánh mua gói</td>
+                    <td align="right" style="font-size:13px;font-weight:600;color:#0b0f14;padding-bottom:6px;">${escapeHtml(input.branchName)}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:12px;color:#6b7280;">Ngày hết hạn</td>
+                    <td align="right" style="font-size:13px;font-weight:600;color:#0b0f14;">${escapeHtml(input.endDate)}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 28px 24px;">
+                <a href="${escapeHtml(input.renewUrl)}" style="display:block;text-align:center;background:#ff4d1c;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:14px 20px;border-radius:999px;">
+                  Gia hạn gói tập
+                </a>
+                <p style="margin:12px 0 0;text-align:center;font-size:12px;color:#6b7280;">
+                  Cần hỗ trợ? Gọi hotline <strong>${escapeHtml(input.hotline)}</strong>
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#f7f8fa;padding:18px 28px;border-top:1px solid #e7eaf0;">
+                <p style="margin:0;font-size:11px;line-height:1.6;color:#9ca3af;">
+                  Wonder Fitness · 5 chi nhánh tại Đà Nẵng · Thẻ hội viên áp dụng tại tất cả chi nhánh.<br />
+                  Email này được gửi tự động, vui lòng không trả lời.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+export async function sendRenewalReminderMail(input: {
+  to: string;
+  name?: string | null;
+  packageName: string;
+  endDate: string;
+  branchName: string;
+  daysLeft: number;
+  hotline?: string;
+}) {
+  const config = mailConfig();
+  const renewUrl = `${(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "")}/goi-tap`;
+  const hotline = input.hotline || "0902 797 443";
+
+  try {
+    await getTransporter().sendMail({
+      from: config.from,
+      to: input.to,
+      subject: `Gói tập của bạn sẽ hết hạn trong ${input.daysLeft} ngày — Wonder Fitness`,
+      text: `Xin chào ${input.name ?? "bạn"},\n\nGói ${input.packageName} của bạn sẽ hết hạn sau ${input.daysLeft} ngày (${input.endDate}).\nChi nhánh mua gói: ${input.branchName}\n\nGia hạn ngay: ${renewUrl}\nHotline: ${hotline}`,
+      html: renewalTemplate({
+        name: input.name,
+        packageName: input.packageName,
+        endDate: input.endDate,
+        branchName: input.branchName,
+        daysLeft: input.daysLeft,
+        renewUrl,
+        hotline,
+      }),
+    });
+  } catch (error) {
+    console.error("[mail] renewal send failed", error);
+    transporter = null;
+    throw new AppError(
+      "MAIL_SEND_FAILED",
+      502,
+      "Không gửi được email nhắc gia hạn. Vui lòng kiểm tra cấu hình SMTP."
     );
   }
 }

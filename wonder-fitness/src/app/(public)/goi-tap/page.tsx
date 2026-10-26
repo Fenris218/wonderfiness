@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getBranches, getPackages } from "@/server/modules/catalog.service";
+import { getBranches, getPackages, getTrainerPriceRange, getTrainers } from "@/server/modules/catalog.service";
 import { PackageGrid } from "@/components/catalog/package-grid";
 import { SectionTitle } from "@/components/ui/badge";
 import { BadgeCheck, CreditCard, QrCode, RefreshCw } from "lucide-react";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Bảng giá gói tập",
-  description: "Gói Gym, PT 1-1, Yoga, Zumba tại Wonder Fitness. Giá minh bạch, tặng tháng, kích hoạt thẻ QR ngay.",
+  description: "Gói Gym và PT 1-1 tại Wonder Fitness. Giá minh bạch, tặng tháng, kích hoạt thẻ QR ngay.",
 };
 
 const NOTES = [
@@ -18,8 +18,28 @@ const NOTES = [
   { icon: BadgeCheck, title: "Không phí ẩn", desc: "Giá đã gồm tủ đồ, nước uống và lớp group X." },
 ];
 
-export default async function PackagesPage() {
-  const [packages, branches] = await Promise.all([getPackages(), getBranches()]);
+export default async function PackagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
+  const { type } = await searchParams;
+  const [allPackages, branches, trainers, ptPriceRange] = await Promise.all([
+    getPackages(),
+    getBranches(),
+    getTrainers(),
+    getTrainerPriceRange(),
+  ]);
+
+  // Yoga/Zumba chuyển sang tab "Lịch Yoga/Zumba" — chỉ bán Gym và PT ở bảng giá.
+  const packages = allPackages.filter((p) => p.packageType === "GYM" || p.packageType === "PT");
+
+  const ptPackage = packages.find((p) => p.packageType === "PT") ?? null;
+  const TYPES = ["GYM", "PT"] as const;
+  const requested = (type ?? "").toUpperCase();
+  const initialFilter = TYPES.includes(requested as (typeof TYPES)[number])
+    ? (requested as (typeof TYPES)[number])
+    : "ALL";
 
   return (
     <>
@@ -39,7 +59,14 @@ export default async function PackagesPage() {
       </section>
 
       <section className="container-page py-10 sm:py-14">
-        <PackageGrid packages={packages} />
+        <PackageGrid
+          packages={packages}
+          trainers={trainers}
+          ptPackageId={ptPackage?.packageId ?? null}
+          ptSessionCount={ptPackage?.sessionCount ?? null}
+          ptPriceRange={ptPriceRange}
+          initialFilter={initialFilter}
+        />
       </section>
 
       <section className="container-page pb-6">

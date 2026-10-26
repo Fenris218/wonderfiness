@@ -20,8 +20,15 @@ export async function generateMetadata({
   return { title: "Chi tiết gói tập" };
 }
 
-export default async function PackageDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PackageDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ trainer?: string }>;
+}) {
   const { id } = await params;
+  const { trainer: trainerParam } = await searchParams;
   const packageId = Number(id);
   if (!Number.isFinite(packageId)) notFound();
 
@@ -38,6 +45,20 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
   const totalMonths = pkg.durationMonths + pkg.bonusMonths;
   const perMonth = Math.round(pkg.price / Math.max(totalMonths, 1));
   const isCustomer = session?.role === "CUSTOMER";
+
+  const isPt = pkg.packageType === "PT";
+  const ptMinPerSession = trainers.length > 0 ? Math.min(...trainers.map((t) => t.pricePerSession)) : 0;
+  const ptMaxPerSession = trainers.length > 0 ? Math.max(...trainers.map((t) => t.pricePerSession)) : 0;
+  const ptRange =
+    isPt && pkg.sessionCount && ptMaxPerSession > 0
+      ? {
+          min: ptMinPerSession * pkg.sessionCount,
+          max: ptMaxPerSession * pkg.sessionCount,
+        }
+      : null;
+
+  const parsedTrainerId = Number(trainerParam);
+  const initialTrainerId = Number.isFinite(parsedTrainerId) && parsedTrainerId > 0 ? parsedTrainerId : null;
 
   return (
     <section className="container-page py-10 sm:py-14">
@@ -77,9 +98,17 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
               {pkg.bonusMonths ? <p className="text-[11px] text-emerald-600">gồm {pkg.bonusMonths} tháng tặng</p> : null}
             </div>
             <div className="card p-4">
-              <p className="text-[11px] uppercase tracking-wide text-ink/40">Quy ra tháng</p>
-              <p className="mt-1 text-lg font-extrabold text-ink">{formatVND(perMonth)}</p>
-              <p className="text-[11px] text-ink/40">tiết kiệm hơn mua lẻ</p>
+              <p className="text-[11px] uppercase tracking-wide text-ink/40">
+                {isPt ? "Học phí / buổi" : "Quy ra tháng"}
+              </p>
+              <p className="mt-1 text-lg font-extrabold text-ink">
+                {isPt && ptMaxPerSession > 0
+                  ? `${formatVND(ptMinPerSession)} – ${formatVND(ptMaxPerSession)}`
+                  : formatVND(perMonth)}
+              </p>
+              <p className="text-[11px] text-ink/40">
+                {isPt ? "tuỳ huấn luyện viên" : "tiết kiệm hơn mua lẻ"}
+              </p>
             </div>
             <div className="card p-4">
               <p className="text-[11px] uppercase tracking-wide text-ink/40">Buổi tập</p>
@@ -121,16 +150,28 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
             packageId={pkg.packageId}
             packageType={pkg.packageType}
             price={pkg.price}
+            sessionCount={pkg.sessionCount}
             branches={branches}
             trainers={trainers.map((t) => ({
               trainerId: t.trainerId,
               fullName: t.fullName,
               branchId: t.branchId,
               specialization: t.specialization,
+              pricePerSession: t.pricePerSession,
             }))}
+            initialTrainerId={initialTrainerId}
             isLoggedIn={isCustomer}
-            nextPath={`/goi-tap/${pkg.packageId}`}
+            nextPath={`/goi-tap/${pkg.packageId}${initialTrainerId ? `?trainer=${initialTrainerId}` : ""}`}
           />
+          {ptRange ? (
+            <div className="mt-3 rounded-xl bg-brand-soft/70 p-3.5 text-[12.5px] text-brand-dark ring-1 ring-brand/15">
+              Tổng học phí gói {pkg.sessionCount} buổi:{" "}
+              <strong className="font-bold">
+                {formatVND(ptRange.min)} – {formatVND(ptRange.max)}
+              </strong>{" "}
+              tuỳ HLV bạn chọn.
+            </div>
+          ) : null}
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-white p-4 text-[12px] leading-relaxed text-ink/50 ring-1 ring-line">
             <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
             <p>

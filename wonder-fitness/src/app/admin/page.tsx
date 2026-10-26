@@ -14,6 +14,7 @@ import {
 import { requireStaff } from "@/server/auth";
 import { getDashboard } from "@/server/modules/report.service";
 import { listLeads, listRenewals } from "@/server/modules/lead.service";
+import { processDueRenewalEmails } from "@/server/modules/renewal.service";
 import { formatDate, formatVND } from "@/lib/format";
 import { StatCard } from "@/components/ui/card";
 import { BranchBars, FunnelChart, PackagePie, RevenueChart } from "@/components/admin/charts";
@@ -24,6 +25,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const session = await requireStaff();
+  await processDueRenewalEmails();
   const [dash, leads, renewals] = await Promise.all([
     getDashboard(session),
     listLeads(session, { status: "NEW" }),

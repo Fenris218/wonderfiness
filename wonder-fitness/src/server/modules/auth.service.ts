@@ -49,6 +49,9 @@ export async function loginUser(input: z.infer<typeof loginSchema>): Promise<Ses
   if (!user) throw new AppError("INVALID_CREDENTIALS", 401, "Tài khoản hoặc mật khẩu không đúng.");
   const valid = await verifyPassword(input.password, user.passwordHash);
   if (!valid) throw new AppError("INVALID_CREDENTIALS", 401, "Tài khoản hoặc mật khẩu không đúng.");
+  if (user.staff && !user.staff.isActive) {
+    throw new AppError("ACCOUNT_DISABLED", 403, "Tài khoản nhân viên đã ngưng hoạt động. Vui lòng liên hệ quản trị viên.");
+  }
 
   const session = await buildSession(user.userId);
   if (!session) throw new AppError("ACCOUNT_INVALID", 401, "Tài khoản không hợp lệ.");

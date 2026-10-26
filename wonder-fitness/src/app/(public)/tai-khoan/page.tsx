@@ -8,13 +8,14 @@ import {
   CreditCard,
   Dumbbell,
   LogIn,
+  MapPin,
   QrCode,
   Receipt,
   Settings,
   Sparkles,
 } from "lucide-react";
 import { getSession } from "@/server/auth";
-import { listMyMemberships, listMyOrders } from "@/server/modules/order.service";
+import { listMyCheckins, listMyMemberships, listMyOrders } from "@/server/modules/order.service";
 import { createQrToken, qrDataUrl } from "@/server/qr";
 import { formatDate, formatDateTime, formatVND } from "@/lib/format";
 import { ORDER_STATUS } from "@/lib/constants";
@@ -31,9 +32,10 @@ export default async function AccountPage() {
   if (!session) redirect("/dang-nhap?next=/tai-khoan");
   if (session.role !== "CUSTOMER" || !session.customerId) redirect("/admin");
 
-  const [memberships, orders] = await Promise.all([
+  const [memberships, orders, checkins] = await Promise.all([
     listMyMemberships(session.customerId),
     listMyOrders(session.customerId),
+    listMyCheckins(session.customerId, 12),
   ]);
 
   const activeMembership = memberships.find((m) => m.status === "ACTIVE") ?? memberships[0] ?? null;
@@ -47,6 +49,9 @@ export default async function AccountPage() {
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">Xin chào</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-ink">{session.name}</h1>
           <p className="mt-1 text-sm text-ink/50">
+            Thẻ áp dụng tại cả 5 chi nhánh — bạn có thể check-in ở bất kỳ Wonder nào.
+          </p>
+          <p className="mt-0.5 text-sm text-ink/50">
             {activeMembership
               ? `Bạn đang có ${memberships.filter((m) => m.status === "ACTIVE").length} thẻ hoạt động tại Wonder.`
               : "Bạn chưa có thẻ hội viên đang hoạt động."}
@@ -148,7 +153,9 @@ export default async function AccountPage() {
                       <div className="min-w-0">
                         <p className="truncate text-[13px] font-semibold text-ink">{o.package.packageName}</p>
                         <p className="mt-0.5 font-mono text-[11px] text-ink/40">{o.orderCode}</p>
-                        <p className="mt-0.5 text-[11px] text-ink/40">{formatDateTime(o.createdAt)} · {o.branch.branchName}</p>
+                        <p className="mt-0.5 text-[11px] text-ink/40">
+                          {formatDateTime(o.createdAt)} · Mua tại {o.branch.branchName}
+                        </p>
                       </div>
                       <div className="shrink-0 text-right">
                         <p className="text-[13px] font-semibold text-ink">{formatVND(o.totalAmount)}</p>
@@ -195,12 +202,46 @@ export default async function AccountPage() {
             </div>
           </div>
 
+          <div className="card p-5">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
+              <MapPin className="h-4 w-4 text-brand" /> Lịch sử check-in
+            </h2>
+            <p className="mt-1 text-[11.5px] text-ink/45">Chi nhánh bạn đã đến tập gần đây.</p>
+            <div className="mt-3 grid gap-2">
+              {checkins.length === 0 ? (
+                <p className="text-[13px] text-ink/45">Chưa có lượt check-in nào.</p>
+              ) : (
+                checkins.slice(0, 6).map((c) => (
+                  <div key={c.checkinId} className="flex items-center justify-between rounded-xl bg-surface px-3.5 py-2.5">
+                    <div>
+                      <p className="text-[12.5px] font-semibold text-ink">{c.branch.branchName}</p>
+                      <p className="text-[11px] text-ink/45">
+                        {formatDateTime(c.checkinTime)} · {c.checkinType === "PT" ? "Buổi PT" : "Gym"}
+                      </p>
+                    </div>
+                    <span
+                      className={`chip ${
+                        c.result === "VALID"
+                          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                          : c.result === "EXPIRED"
+                          ? "bg-amber-50 text-amber-700 ring-amber-200"
+                          : "bg-rose-50 text-rose-600 ring-rose-200"
+                      }`}
+                    >
+                      {c.result === "VALID" ? "Hợp lệ" : c.result === "EXPIRED" ? "Hết hạn" : "Không hợp lệ"}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="rounded-2xl bg-ink p-5 text-white">
             <p className="flex items-center gap-2 text-sm font-semibold">
               <CreditCard className="h-4 w-4 text-brand" /> Cần hỗ trợ?
             </p>
             <p className="mt-1.5 text-[12.5px] leading-relaxed text-white/55">
-              Gọi 0236 3888 100 hoặc để lại yêu cầu — nhân viên chi nhánh sẽ hỗ trợ bạn trong 15 phút.
+              Gọi 0902 797 443 hoặc để lại yêu cầu — nhân viên chi nhánh sẽ hỗ trợ bạn trong 15 phút.
             </p>
             <Link href="/tu-van" className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:underline">
               Gửi yêu cầu hỗ trợ <ArrowUpRight className="h-3.5 w-3.5" />

@@ -1,47 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { BellRing, Check, Loader2, MessageCircle } from "lucide-react";
+import { BellRing, Check, Loader2, Mail, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/format";
-import { daysLeft } from "@/lib/format";
+import { daysLeft, formatDate } from "@/lib/format";
 
 export type RenewalRow = {
   membershipId: number;
   memberCode: string;
   customerName: string;
   phone: string | null;
+  email: string | null;
   packageName: string;
   branchName: string;
   endDate: string;
   lastContactAt: string | null;
+  emailSentAt: string | null;
+  lastCallAt: string | null;
+  callEnabled: boolean;
+  renewed: boolean;
 };
 
 export function RenewalList({ rows }: { rows: RenewalRow[] }) {
   const [items, setItems] = useState(rows);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [reminded, setReminded] = useState<number[]>([]);
 
-  async function remind(id: number) {
-    setBusyId(id);
+  async function remind(row: RenewalRow) {
+    setBusyId(row.membershipId);
     setError(null);
     try {
-      const res = await fetch(`/api/v1/admin/renewals/${id}/remind`, {
+      const res = await fetch(`/api/v1/admin/renewals/${row.membershipId}/remind`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channel: "ZALO" }),
+        body: JSON.stringify({ channel: row.email ? "EMAIL" : "ZALO" }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? "Không gửi được nhắc.");
-      setReminded((prev) => [...prev, id]);
       const now = new Date().toISOString();
-      setItems((prev) => prev.map((r) => (r.membershipId === id ? { ...r, lastContactAt: now } : r)));
+      setItems((prev) =>
+        prev.map((r) =>
+          r.membershipId === row.membershipId
+            ? {
+                ...r,
+                lastContactAt: now,
+                emailSentAt: row.email ? now : r.emailSentAt,
+                callEnabled: Boolean(row.email && row.phone),
+              }
+            : r
+        )
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
     } finally {
       setBusyId(null);
     }
+  }
+
+  function logCall(id: number) {
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((r) => (r.membershipId === id ? { ...r, lastCallAt: now } : r)));
+    void fetch(`/api/v1/admin/renewals/${id}/call`, { method: "POST", keepalive: true }).catch(() => undefined);
   }
 
   if (items.length === 0) {
@@ -64,7 +83,7 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
 
       <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-[13px]">
+          <table className="w-full min-w-[860px] text-left text-[13px]">
             <thead className="bg-surface/70 text-[10.5px] uppercase tracking-wide text-ink/40">
               <tr>
                 <th className="px-4 py-3 font-semibold">Hội viên</th>
@@ -78,7 +97,6 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
             <tbody className="divide-y divide-line">
               {items.map((r) => {
                 const left = daysLeft(r.endDate);
-                const isReminded = reminded.includes(r.membershipId);
                 return (
                   <tr key={r.membershipId} className="hover:bg-surface/40">
                     <td className="px-4 py-3">
@@ -86,6 +104,7 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
                       <p className="text-[11px] text-ink/45">
                         {r.memberCode} · {r.branchName.replace("Wonder ", "")}
                       </p>
+                      {r.phone ? <p className="text-[11px] text-ink/40">{r.phone}</p> : null}
                     </td>
                     <td className="px-4 py-3 text-ink/60">{r.packageName}</td>
                     <td className="px-4 py-3 text-ink/60">{formatDate(r.endDate)}</td>
@@ -101,23 +120,56 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[11.5px] text-ink/45">
-                      {r.lastContactAt ? formatDate(r.lastContactAt) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {isReminded ? (
+                      {r.emailSentAt ? (
                         <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
-                          <Check className="h-3 w-3" /> Đã nhắc
+                          <Mail className="h-3 w-3" /> Đã gửi email
                         </span>
+                      ) : r.lastContactAt ? (
+                        formatDate(r.lastContactAt)
                       ) : (
-                        <Button size="sm" variant="soft" onClick={() => remind(r.membershipId)} disabled={busyId === r.membershipId}>
-                          {busyId === r.membershipId ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <BellRing className="h-3.5 w-3.5" />
-                          )}
-                          Nhắc gia hạn
-                        </Button>
+                        "—"
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        {r.renewed ? (
+                          <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
+                            <Check className="h-3 w-3" /> Đã gia hạn
+                          </span>
+                        ) : (
+                          <>
+                            {!r.emailSentAt ? (
+                              <Button
+                                size="sm"
+                                variant="soft"
+                                onClick={() => remind(r)}
+                                disabled={busyId === r.membershipId}
+                              >
+                                {busyId === r.membershipId ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <BellRing className="h-3.5 w-3.5" />
+                                )}
+                                {r.email ? "Gửi email nhắc" : "Ghi nhắc"}
+                              </Button>
+                            ) : null}
+
+                            {r.callEnabled && r.phone ? (
+                              <a
+                                href={`tel:${r.phone}`}
+                                onClick={() => logCall(r.membershipId)}
+                                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-emerald-700"
+                              >
+                                <PhoneCall className="h-3.5 w-3.5" /> Gọi điện
+                              </a>
+                            ) : (
+                              <span className="text-[11px] text-ink/35">
+                                {r.emailSentAt ? "Chưa có SĐT" : "Chờ gửi email"}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -128,7 +180,8 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
       </div>
 
       <p className="flex items-center gap-1.5 text-[11.5px] text-ink/40">
-        <MessageCircle className="h-3.5 w-3.5" /> Nhắc gia hạn sẽ ghi một nhật ký liên hệ (demo — không gửi tin thật).
+        <Mail className="h-3.5 w-3.5" /> Email nhắc được gửi thật tới email đã xác thực OTP. Nút “Gọi điện” mở dialer
+        với số thật của hội viên (cần điện thoại hỗ trợ gọi).
       </p>
     </div>
   );

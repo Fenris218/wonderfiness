@@ -55,10 +55,12 @@ export function ButtonLink({
   size = "md",
   className,
   children,
-}: CommonProps & { href: string }) {
+  onClick,
+}: CommonProps & { href: string; onClick?: () => void }) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-full font-semibold outline-none transition focus-visible:ring-4",
         variants[variant],

@@ -91,7 +91,10 @@ export default async function AdminCatalogPage() {
                     {t.specialization} · {t.branch.branchName.replace("Wonder ", "")}
                   </p>
                 </div>
-                <span className="chip shrink-0 bg-emerald-50 text-emerald-700 ring-emerald-200">{t.rating.toFixed(1)}★</span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="text-[11.5px] font-semibold text-brand">{formatVND(t.pricePerSession)}/buổi</span>
+                  <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">{t.rating.toFixed(1)}★</span>
+                </div>
               </li>
             ))}
           </ul>

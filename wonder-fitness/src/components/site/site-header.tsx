@@ -8,7 +8,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 const NAV = [
   { href: "/", label: "Trang chủ" },
   { href: "/goi-tap", label: "Gói tập" },
-  { href: "/pt", label: "HLV cá nhân" },
+  { href: "/lich-yoga-zumba", label: "Lịch Yoga/Zumba" },
   { href: "/chi-nhanh", label: "Chi nhánh" },
 ];
 
@@ -24,21 +24,17 @@ export async function SiteHeader() {
             <Dumbbell className="h-3.5 w-3.5 text-brand" />
             5 chi nhánh tại Đà Nẵng · Mở cửa 05:30 – 21:30 mỗi ngày
           </p>
-          <a href="tel:02363888100" className="flex items-center gap-2 font-semibold text-white/85 hover:text-white">
+          <a href="tel:0902797443" className="flex items-center gap-2 font-semibold text-white/85 hover:text-white">
             <Phone className="h-3.5 w-3.5 text-brand" />
-            0236 3888 100
+            0902 797 443
           </a>
         </div>
       </div>
 
       <div className="container-page relative flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white shadow-[0_8px_20px_-8px_rgba(255,77,28,.8)]">
-            <Dumbbell className="h-5 w-5" />
-          </span>
-          <span className="text-lg font-black tracking-tight text-ink">
-            WONDER<span className="text-brand">.</span>
-          </span>
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Wonder Fitness — Trang chủ">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.jpg" alt="Wonder Fitness" className="h-12 w-auto object-contain" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">

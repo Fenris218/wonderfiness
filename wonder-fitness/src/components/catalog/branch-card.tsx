@@ -1,4 +1,5 @@
-import { Clock, MapPin, Phone } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Phone } from "lucide-react";
+import { googleMapsUrl } from "@/lib/maps";
 
 export type BranchCardData = {
   branchId: number;
@@ -12,8 +13,16 @@ export type BranchCardData = {
 };
 
 export function BranchCard({ branch, index }: { branch: BranchCardData; index?: number }) {
+  const mapUrl = branch.mapUrl || googleMapsUrl(branch.address, branch.district);
+
   return (
-    <article className="card card-hover flex gap-4 p-5">
+    <a
+      href={mapUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Mở Google Maps — ${branch.branchName}`}
+      className="card card-hover flex gap-4 p-5 transition hover:border-brand/40"
+    >
       <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-soft text-lg font-black text-brand">
         {String((index ?? branch.branchId) + 1).padStart(2, "0")}
       </div>
@@ -33,7 +42,10 @@ export function BranchCard({ branch, index }: { branch: BranchCardData; index?: 
             {branch.phone}
           </p>
         ) : null}
+        <p className="mt-2.5 inline-flex items-center gap-1.5 text-[12px] font-semibold text-brand">
+          Xem trên Google Maps <ExternalLink className="h-3.5 w-3.5" />
+        </p>
       </div>
-    </article>
+    </a>
   );
 }

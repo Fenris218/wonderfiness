@@ -99,6 +99,12 @@ export default async function PaymentResultPage({
                     <dd className="text-right font-medium text-ink">{v}</dd>
                   </div>
                 ))}
+                {order.trainer ? (
+                  <div className="flex items-center justify-between gap-3 px-5 py-2.5">
+                    <dt className="text-ink/45">Huấn luyện viên</dt>
+                    <dd className="text-right font-medium text-ink">{order.trainer.fullName}</dd>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between gap-3 bg-surface/50 px-5 py-3">
                   <dt className="font-semibold text-ink">Tổng tiền</dt>
                   <dd className="text-base font-extrabold text-brand">{formatVND(order.totalAmount)}</dd>

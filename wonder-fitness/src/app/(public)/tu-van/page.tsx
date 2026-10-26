@@ -50,8 +50,8 @@ export default async function ConsultationPage() {
             </span>
             <div>
               <p className="text-[11px] uppercase tracking-wide text-white/40">Hotline</p>
-              <a href="tel:02363888100" className="text-lg font-extrabold hover:text-brand">
-                0236 3888 100
+              <a href="tel:0902797443" className="text-lg font-extrabold hover:text-brand">
+                0902 797 443
               </a>
             </div>
           </div>

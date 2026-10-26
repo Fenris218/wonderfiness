@@ -40,6 +40,7 @@ services:
       SMTP_USER: "wonderfitnessgymcenter@gmail.com"
       SMTP_PASS: "hikjtzcizucmqkmd"
       MAIL_FROM: "Wonder Fitness <wonderfitnessgymcenter@gmail.com>"
+      LAN_IP: "${LAN_IP:-}"
     ports:
       - "3000:3000"
 

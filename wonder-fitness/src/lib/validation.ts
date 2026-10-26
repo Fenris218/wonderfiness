@@ -100,3 +100,20 @@ export const resetPasswordSchema = z.object({
   code: otpCodeSchema,
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự").max(72, "Mật khẩu tối đa 72 ký tự"),
 });
+
+export const staffCreateSchema = z.object({
+  fullName: z.string().trim().min(2, "Vui lòng nhập họ tên").max(80, "Họ tên quá dài"),
+  phone: phoneSchema,
+  email: emailSchema.optional().or(z.literal("")),
+  password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự").max(72, "Mật khẩu tối đa 72 ký tự"),
+  branchId: z.coerce.number().int().positive("Chọn chi nhánh"),
+});
+
+export const staffUpdateSchema = z.object({
+  fullName: z.string().trim().min(2, "Vui lòng nhập họ tên").max(80, "Họ tên quá dài"),
+  phone: phoneSchema,
+  email: emailSchema.optional().or(z.literal("")),
+  branchId: z.coerce.number().int().positive("Chọn chi nhánh"),
+  isActive: z.boolean().default(true),
+  password: z.union([z.literal(""), z.string().min(6, "Mật khẩu tối thiểu 6 ký tự").max(72)]).optional(),
+});

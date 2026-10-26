@@ -31,11 +31,15 @@
 ### 1.1 Xem bảng giá và chọn gói
 
 1. Mở **Gói tập** trên menu.
-2. Lọc theo nhu cầu: *Gym / PT 1-1 / Yoga / Zumba*.
+2. Lọc theo nhu cầu: *Gym / PT 1-1*.
 3. Nhấn **Chọn gói này** để xem chi tiết: thời hạn, quyền lợi, quy ra giá/tháng.
 4. Tại trang chi tiết, chọn **chi nhánh**, **HLV** (nếu là gói PT) và **hình thức thanh toán**.
 
 > Gói nổi bật được gắn nhãn *Bán chạy nhất*. Giá đã bao gồm tủ đồ, nước uống và lớp nhóm — không phí ẩn.
+>
+> **Lịch Yoga/Zumba:** mở tab **Lịch Yoga/Zumba** trên menu để xem lịch lớp (ảnh `yoga.jpg`, `zumba.jpg`). Yoga/Zumba không còn nằm trong bảng giá.
+>
+> **Trợ lý ảo:** nút **Hỏi Wonder** ở góc phải màn hình trả lời nhanh theo kịch bản về giá, lịch Yoga/Zumba, chi nhánh, HLV PT và hotline **0902 797 443**.
 
 ### 1.2 Đặt lịch tư vấn miễn phí (không cần tài khoản)
 
@@ -344,6 +348,8 @@ npm run db:reset     # reset + seed
 | Không nhận được lead | Lead đã bị nhân viên khác khoá, hoặc khác chi nhánh. Admin có thể **Trả về**. |
 | Không nhận được email OTP | Kiểm tra `SMTP_USER`/`SMTP_PASS` (Gmail App Password 16 ký tự) trong `.env` hoặc `docker-compose.yml`; xem mục Spam; bảo đảm tài khoản đã liên kết email. |
 | Gmail báo `Invalid login` | App Password bị thu hồi hoặc 2FA chưa bật. Tạo App Password mới tại myaccount.google.com/apppasswords. |
+| Next.js in `Network: http://172.x.x.x:3000` | Đó là IP **nội bộ container**, không phải IP Wi-Fi. Chạy `npm run docker:up` (hoặc `scripts/docker-up.ps1`) để tự dò IPv4 Wi-Fi và in đúng địa chỉ `http://<IP-Wi-Fi>:3000`. |
+| Điện thoại không mở được `http://<IP>:3000` | Điện thoại và máy tính phải cùng Wi-Fi; kiểm tra Windows Firewall cho Docker Desktop; dùng `npm run docker:up` để lấy đúng IP. |
 | Check-in báo “chưa gắn chi nhánh” | Tài khoản ADMIN không có hồ sơ `staff`. Dùng `staff@wonder.vn` để test check-in. |
 
 ### 3.11 Giới hạn của bản demo

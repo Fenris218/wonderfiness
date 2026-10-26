@@ -10,10 +10,16 @@ Website demo cho chuỗi 5 phòng gym tại Đà Nẵng, xây dựng từ báo c
 ## Chạy nhanh bằng Docker
 
 ```bash
-docker compose up -d --build
-# → http://localhost:3000
+npm run docker:up
+# tương đương: powershell -ExecutionPolicy Bypass -File scripts/docker-up.ps1
+# → http://localhost:3000 và in kèm http://<IP-Wi-Fi>:3000 để mở trên điện thoại
 docker compose logs -f web
 ```
+
+> Script tự dò IPv4 của Wi-Fi/Ethernet hiện tại và truyền vào container qua `LAN_IP`.
+> Dòng `Network: http://172.18.0.x:3000` do Next.js in ra là **IP nội bộ container**, không phải IP Wi-Fi.
+> Nếu chạy `docker compose up` trực tiếp, có thể truyền thủ công:
+> `$env:LAN_IP="192.168.1.10"; docker compose up -d --build` (PowerShell).
 
 Container web tự đồng bộ schema (`prisma db push`) và seed dữ liệu demo khi database trống.
 
@@ -54,6 +60,8 @@ MAIL_FROM="Wonder Fitness <wonderfitnessgymcenter@gmail.com>"
 ## Tính năng chính
 
 - **Khách:** xem bảng giá, chi tiết gói, HLV, chi nhánh, gửi form tư vấn, đăng ký/đăng nhập.
+- **Lịch lớp nhóm:** tab **Lịch Yoga/Zumba** hiển thị lịch lớp qua ảnh `yoga.jpg` / `zumba.jpg`.
+- **Trợ lý ảo:** chatbot **Hỏi Wonder** trả lời theo kịch bản về giá, lịch, chi nhánh, HLV, hotline.
 - **Tài khoản:** cập nhật thông tin cá nhân, đổi mật khẩu, liên kết Gmail/email thật bằng OTP, quên mật khẩu qua email.
 - **Mua gói:** tạo đơn → thanh toán mô phỏng (VNPay/MoMo/VietQR) → sinh thẻ hội viên QR.
 - **Nhân viên:** quản lý lead có khoá chống tranh, nhật ký liên hệ, check-in QR, nhắc gia hạn.

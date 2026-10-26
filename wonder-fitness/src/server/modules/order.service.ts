@@ -29,6 +29,26 @@ export async function createOrder(customerId: number, input: z.infer<typeof orde
   if (!pkg || !pkg.isActive) throw new AppError("PACKAGE_NOT_FOUND", 404, "Gói tập không còn bán.");
   if (!branch) throw new AppError("BRANCH_NOT_FOUND", 404, "Chi nhánh không tồn tại.");
 
+  let trainerId: number | null = null;
+  let totalAmount = pkg.price;
+
+  if (pkg.packageType === "PT") {
+    if (!input.trainerId) {
+      throw new AppError("TRAINER_REQUIRED", 422, "Vui lòng chọn huấn luyện viên cho gói PT.");
+    }
+    const trainer = await prisma.trainer.findUnique({ where: { trainerId: input.trainerId } });
+    if (!trainer || !trainer.isActive) {
+      throw new AppError("TRAINER_NOT_FOUND", 404, "Huấn luyện viên không còn nhận lớp.");
+    }
+    if (trainer.branchId !== input.branchId) {
+      throw new AppError("TRAINER_BRANCH_MISMATCH", 422, "Huấn luyện viên không thuộc chi nhánh đã chọn.");
+    }
+    trainerId = trainer.trainerId;
+    totalAmount = trainer.pricePerSession * (pkg.sessionCount ?? 1);
+  } else if (input.trainerId) {
+    throw new AppError("TRAINER_NOT_ALLOWED", 422, "Chỉ gói PT mới chọn huấn luyện viên.");
+  }
+
   const start = new Date();
   start.setDate(start.getDate() + 3);
 
@@ -38,27 +58,27 @@ export async function createOrder(customerId: number, input: z.infer<typeof orde
       customerId,
       branchId: input.branchId,
       packageId: input.packageId,
-      trainerId: input.trainerId ?? null,
+      trainerId,
       paymentOption: input.paymentOption,
       orderStatus: "PENDING",
-      totalAmount: pkg.price,
+      totalAmount,
       requestedStartDate: start,
       payments: {
         create: {
           paymentMethod: "MOCK",
-          amount: pkg.price,
+          amount: totalAmount,
           paymentStatus: "PENDING",
         },
       },
     },
-    include: { package: true, branch: true, payments: true },
+    include: { package: true, branch: true, payments: true, trainer: true },
   });
 }
 
 export async function getOrderByCode(code: string, session: Session) {
   const order = await prisma.registrationOrder.findUnique({
     where: { orderCode: code },
-    include: { package: true, branch: true, payments: true, membership: true, customer: true },
+    include: { package: true, branch: true, payments: true, membership: true, customer: true, trainer: true },
   });
   if (!order) throw new AppError("ORDER_NOT_FOUND", 404, "Không tìm thấy đơn hàng.");
   const isOwner = session.customerId === order.customerId;
@@ -162,8 +182,17 @@ export async function confirmCashPayment(orderCodeValue: string, session: Sessio
 export async function listMyOrders(customerId: number) {
   return prisma.registrationOrder.findMany({
     where: { customerId },
-    include: { package: true, branch: true, payments: true, membership: true },
+    include: { package: true, branch: true, payments: true, membership: true, trainer: true },
     orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function listMyCheckins(customerId: number, take = 20) {
+  return prisma.checkIn.findMany({
+    where: { membership: { customerId } },
+    include: { branch: true, membership: { include: { order: { include: { package: true } } } } },
+    orderBy: { checkinTime: "desc" },
+    take,
   });
 }
 

@@ -30,7 +30,10 @@ export function MembershipCard({
       <div className="relative flex items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">Thẻ hội viên</p>
-          <p className="mt-1 text-lg font-extrabold tracking-tight">WONDER<span className="text-brand">.</span></p>
+          <span className="mt-1.5 inline-grid h-8 w-14 place-items-center rounded-md bg-white p-0.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.jpg" alt="Wonder Fitness" className="h-full w-full object-contain" />
+          </span>
         </div>
         <span
           className={cn(

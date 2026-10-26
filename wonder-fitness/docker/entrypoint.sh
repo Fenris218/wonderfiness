@@ -28,4 +28,10 @@ if [ "${SEED_DB:-true}" = "true" ]; then
 fi
 
 echo "▸ Khởi động web tại cổng ${PORT:-3000}"
+if [ -n "${LAN_IP:-}" ]; then
+  echo "▸ Truy cập từ điện thoại (cùng Wi-Fi): http://${LAN_IP}:3000"
+else
+  echo "▸ Dòng 'Network: http://172.x.x.x:3000' của Next.js là IP nội bộ container."
+  echo "  Chạy scripts/docker-up.ps1 để tự dò IP Wi-Fi và in đúng địa chỉ truy cập."
+fi
 exec npm start

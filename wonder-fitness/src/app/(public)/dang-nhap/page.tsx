@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/server/auth";
 import { LoginForm } from "@/components/auth/auth-forms";
-import { Dumbbell, Quote } from "lucide-react";
+import { Quote } from "lucide-react";
 
 export const metadata: Metadata = { title: "Đăng nhập" };
 export const dynamic = "force-dynamic";
@@ -22,8 +22,9 @@ export default async function LoginPage({
         <div className="relative overflow-hidden rounded-[28px] bg-ink p-10 text-white">
           <div className="absolute inset-0 hero-grid opacity-50" />
           <div className="relative">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand">
-              <Dumbbell className="h-6 w-6" />
+            <span className="inline-grid h-14 w-24 place-items-center rounded-2xl bg-white p-1.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="Wonder Fitness" className="h-full w-full object-contain" />
             </span>
             <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight">
               Chào mừng

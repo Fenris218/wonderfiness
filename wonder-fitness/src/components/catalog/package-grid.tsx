@@ -1,24 +1,52 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PriceCard, type PackageCardData } from "@/components/catalog/price-card";
+import { PriceCard, type PackageCardData, type PriceRange } from "@/components/catalog/price-card";
+import { TrainerShowcase, type ShowcaseTrainer } from "@/components/catalog/trainer-showcase";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
   { id: "ALL", label: "Tất cả" },
   { id: "GYM", label: "Gym" },
   { id: "PT", label: "PT 1-1" },
-  { id: "YOGA", label: "Yoga" },
-  { id: "ZUMBA", label: "Zumba" },
-];
+] as const;
 
-export function PackageGrid({ packages }: { packages: PackageCardData[] }) {
-  const [filter, setFilter] = useState("ALL");
+type Filter = (typeof FILTERS)[number]["id"];
+
+export function PackageGrid({
+  packages,
+  trainers = [],
+  ptPackageId = null,
+  ptSessionCount = null,
+  ptPriceRange = null,
+  initialFilter = "ALL",
+}: {
+  packages: PackageCardData[];
+  trainers?: ShowcaseTrainer[];
+  ptPackageId?: number | null;
+  ptSessionCount?: number | null;
+  ptPriceRange?: { min: number; max: number } | null;
+  initialFilter?: Filter;
+}) {
+  const [filter, setFilter] = useState<Filter>(initialFilter);
 
   const list = useMemo(
     () => (filter === "ALL" ? packages : packages.filter((p) => p.packageType === filter)),
     [filter, packages]
   );
+
+  function priceRangeFor(pkg: PackageCardData): PriceRange | undefined {
+    if (pkg.packageType !== "PT" || !ptPriceRange || ptPriceRange.max <= 0 || !pkg.sessionCount) {
+      return undefined;
+    }
+    return {
+      min: ptPriceRange.min * pkg.sessionCount,
+      max: ptPriceRange.max * pkg.sessionCount,
+      minPerSession: ptPriceRange.min,
+      maxPerSession: ptPriceRange.max,
+      sessions: pkg.sessionCount,
+    };
+  }
 
   return (
     <div>
@@ -40,9 +68,13 @@ export function PackageGrid({ packages }: { packages: PackageCardData[] }) {
         ))}
       </div>
 
+      {filter === "PT" ? (
+        <TrainerShowcase trainers={trainers} ptPackageId={ptPackageId} sessionCount={ptSessionCount} />
+      ) : null}
+
       <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((pkg) => (
-          <PriceCard key={pkg.packageId} pkg={pkg} />
+          <PriceCard key={pkg.packageId} pkg={pkg} priceRange={priceRangeFor(pkg)} />
         ))}
       </div>
 

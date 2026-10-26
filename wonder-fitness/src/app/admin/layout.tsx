@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Dumbbell, ExternalLink } from "lucide-react";
 import { requireStaff } from "@/server/auth";
 import { AdminNav, AdminMobileNav } from "@/components/admin/admin-nav";
 import { LogoutButton } from "@/components/auth/logout-button";
@@ -12,16 +11,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-surface">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-ink px-4 py-5 lg:flex">
-        <Link href="/" className="flex items-center gap-2.5 px-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-white">
-            <Dumbbell className="h-5 w-5" />
+        <Link href="/admin" className="flex items-center gap-2.5 px-2" aria-label="Wonder Fitness — Cổng nhân viên">
+          <span className="grid h-12 w-16 place-items-center rounded-xl bg-white p-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.jpg" alt="Wonder Fitness" className="h-full w-full object-contain" />
           </span>
-          <div>
-            <p className="text-sm font-black tracking-tight text-white">
-              WONDER<span className="text-brand">.</span>
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Cổng nhân viên</p>
-          </div>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Cổng nhân viên</p>
         </Link>
 
         <div className="mt-7 flex-1">
@@ -38,11 +33,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <p className="text-[10.5px] text-white/40">{ROLE_LABELS[session.role] ?? session.role}</p>
             </div>
           </div>
-          <div className="mt-2.5 flex items-center justify-between border-t border-white/10 pt-2">
-            <Link href="/" className="inline-flex items-center gap-1 text-[11px] text-white/45 hover:text-brand">
-              Xem website <ExternalLink className="h-3 w-3" />
-            </Link>
-            <LogoutButton compact />
+          <div className="mt-2.5 border-t border-white/10 pt-2">
+            <LogoutButton
+              tone="dark"
+              className="w-full justify-center border border-white/10 bg-white/5 hover:bg-white/10"
+            />
           </div>
         </div>
       </aside>
@@ -51,12 +46,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <header className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur-xl">
           <div className="flex h-14 items-center justify-between gap-3 px-4 lg:px-8">
             <div className="flex items-center gap-2 lg:hidden">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white">
-                <Dumbbell className="h-4 w-4" />
-              </span>
-              <span className="text-sm font-black tracking-tight text-ink">
-                WONDER<span className="text-brand">.</span>
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.jpg" alt="Wonder Fitness" className="h-9 w-auto object-contain" />
             </div>
             <p className="hidden text-[13px] font-medium text-ink/45 lg:block">
               Hệ thống quản lý Wonder Fitness — dữ liệu demo
@@ -65,7 +56,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Online
               </span>
-              <div className="lg:hidden">
+              <div className="hidden sm:block">
+                <LogoutButton />
+              </div>
+              <div className="sm:hidden">
                 <LogoutButton compact />
               </div>
             </div>

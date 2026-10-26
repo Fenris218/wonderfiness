@@ -6,12 +6,6 @@ import Link from "next/link";
 import { Loader2, Lock, Mail, Phone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const DEMO_ACCOUNTS = [
-  { label: "Khách hàng", identifier: "khach@wonder.vn" },
-  { label: "Nhân viên", identifier: "staff@wonder.vn" },
-  { label: "Quản trị", identifier: "admin@wonder.vn" },
-];
-
 export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
@@ -89,25 +83,6 @@ export function LoginForm({ next }: { next?: string }) {
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         {loading ? "Đang đăng nhập..." : "Đăng nhập"}
       </Button>
-
-      <div className="rounded-xl border border-dashed border-line bg-surface/60 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink/40">Tài khoản demo (mật khẩu 123456)</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {DEMO_ACCOUNTS.map((acc) => (
-            <button
-              key={acc.identifier}
-              type="button"
-              onClick={() => {
-                setIdentifier(acc.identifier);
-                setPassword("123456");
-              }}
-              className="rounded-full border border-line bg-white px-3 py-1 text-[11.5px] font-medium text-ink/65 transition hover:border-brand hover:text-brand"
-            >
-              {acc.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <p className="text-center text-sm text-ink/50">
         Chưa có tài khoản?{" "}

@@ -62,6 +62,7 @@ model Staff {
   branchId  Int
   branch    Branch       @relation(fields: [branchId], references: [branchId])
   fullName  String
+  isActive  Boolean      @default(true)
   createdAt DateTime     @default(now()) @db.Timestamptz(3)
   leads     Lead[]
   contacts  ContactLog[]
@@ -116,6 +117,7 @@ model Trainer {
   photoUrl       String?
   rating         Float               @default(5)
   experience     Int                 @default(1)
+  pricePerSession Int                @default(400000) // VND / buổi PT
   isActive       Boolean             @default(true)
   orders         RegistrationOrder[]
 
@@ -222,6 +224,8 @@ model Membership {
   ptSessionsTotal Int?
   ptSessionsLeft  Int?
   status          String           @default("ACTIVE") // ACTIVE | EXPIRED | FROZEN
+  reminderEmailSentAt DateTime?    @db.Timestamptz(3)
+  lastReminderCallAt  DateTime?    @db.Timestamptz(3)
   createdAt       DateTime         @default(now()) @db.Timestamptz(3)
   checkIns        CheckIn[]
   contacts        ContactLog[]

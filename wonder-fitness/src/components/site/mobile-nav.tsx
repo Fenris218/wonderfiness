@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { ButtonLink } from "@/components/ui/button";
 const NAV = [
   { href: "/", label: "Trang chủ" },
   { href: "/goi-tap", label: "Gói tập" },
-  { href: "/pt", label: "HLV cá nhân" },
+  { href: "/lich-yoga-zumba", label: "Lịch Yoga/Zumba" },
   { href: "/chi-nhanh", label: "Chi nhánh" },
   { href: "/tu-van", label: "Tư vấn miễn phí" },
 ];
@@ -18,6 +18,10 @@ const NAV = [
 export function MobileNav({ session }: { session?: { name: string; role: string } | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <div className="lg:hidden">
@@ -53,15 +57,22 @@ export function MobileNav({ session }: { session?: { name: string; role: string 
                 href={session.role === "CUSTOMER" ? "/tai-khoan" : "/admin"}
                 className="flex-1"
                 size="sm"
+                onClick={() => setOpen(false)}
               >
                 {session.role === "CUSTOMER" ? "Tài khoản của tôi" : "Bảng điều khiển"}
               </ButtonLink>
             ) : (
               <>
-                <ButtonLink href="/dang-nhap" variant="outline" size="sm" className="flex-1">
+                <ButtonLink
+                  href="/dang-nhap"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setOpen(false)}
+                >
                   Đăng nhập
                 </ButtonLink>
-                <ButtonLink href="/dang-ky" size="sm" className="flex-1">
+                <ButtonLink href="/dang-ky" size="sm" className="flex-1" onClick={() => setOpen(false)}>
                   Đăng ký
                 </ButtonLink>
               </>

@@ -10,6 +10,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:backfill": "node scripts/backfill-features.mjs",
+    "docker:up": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/docker-up.ps1",
     "db:reset": "prisma migrate reset --force",
     "typecheck": "tsc --noEmit"
   },
@@ -21,6 +23,7 @@
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "jose": "^5.9.6",
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.468.0",
     "next": "^15.1.6",
     "nodemailer": "^10.2.1",

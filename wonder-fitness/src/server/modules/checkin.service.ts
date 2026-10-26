@@ -10,6 +10,9 @@ export type CheckinResult = {
   memberCode?: string;
   endDate?: Date;
   ptSessionsLeft?: number | null;
+  ptSessionsTotal?: number | null;
+  packageType?: string;
+  branchName?: string;
   duplicate?: boolean;
 };
 
@@ -37,6 +40,20 @@ export async function performCheckin(input: { token: string; type: "GYM" | "PT" 
 
   if (!membership) return { result: "INVALID", message: "Không tìm thấy hội viên với mã này." };
 
+  // Khách không gắn với một chi nhánh cố định — mỗi lượt check-in ghi nhận
+  // chi nhánh thực tế nơi khách đến tập (chi nhánh của nhân viên đang trực).
+  const branchId = session.branchId ?? membership.order.branchId;
+  const branch = await prisma.branch.findUnique({ where: { branchId } });
+  const memberMeta = {
+    memberName: membership.customer.fullName,
+    memberCode: membership.memberCode,
+    endDate: membership.endDate,
+    branchName: branch?.branchName,
+    packageType: membership.order.package.packageType,
+    ptSessionsTotal: membership.ptSessionsTotal,
+    ptSessionsLeft: membership.ptSessionsLeft,
+  };
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -44,18 +61,14 @@ export async function performCheckin(input: { token: string; type: "GYM" | "PT" 
     return {
       result: "EXPIRED",
       message: membership.status === "FROZEN" ? "Thẻ đang bảo lưu." : "Thẻ đã hết hạn.",
-      memberName: membership.customer.fullName,
-      memberCode: membership.memberCode,
-      endDate: membership.endDate,
+      ...memberMeta,
     };
   }
   if (membership.endDate < today) {
     return {
       result: "EXPIRED",
       message: "Thẻ đã hết hạn. Vui lòng gia hạn tại quầy.",
-      memberName: membership.customer.fullName,
-      memberCode: membership.memberCode,
-      endDate: membership.endDate,
+      ...memberMeta,
     };
   }
 
@@ -67,29 +80,31 @@ export async function performCheckin(input: { token: string; type: "GYM" | "PT" 
     return {
       result: "VALID",
       message: "Hội viên vừa check-in cách đây ít phút.",
-      memberName: membership.customer.fullName,
-      memberCode: membership.memberCode,
-      endDate: membership.endDate,
-      ptSessionsLeft: membership.ptSessionsLeft,
+      ...memberMeta,
       duplicate: true,
     };
   }
 
   if (input.type === "PT") {
+    if (membership.order.package.packageType !== "PT") {
+      return {
+        result: "INVALID",
+        message: "Hội viên đang dùng gói GYM — không có buổi PT để trừ.",
+        ...memberMeta,
+      };
+    }
     if (!membership.ptSessionsTotal) {
       return {
         result: "INVALID",
         message: "Thẻ này không phải gói PT.",
-        memberName: membership.customer.fullName,
-        memberCode: membership.memberCode,
+        ...memberMeta,
       };
     }
     if ((membership.ptSessionsLeft ?? 0) <= 0) {
       return {
         result: "INVALID",
-        message: "Đã hết số buổi PT.",
-        memberName: membership.customer.fullName,
-        memberCode: membership.memberCode,
+        message: `Hội viên đã dùng hết ${membership.ptSessionsTotal} buổi PT.`,
+        ...memberMeta,
         ptSessionsLeft: 0,
       };
     }
@@ -105,7 +120,7 @@ export async function performCheckin(input: { token: string; type: "GYM" | "PT" 
     await tx.checkIn.create({
       data: {
         membershipId: membership!.membershipId,
-        branchId: session.branchId ?? membership!.order.branchId,
+        branchId,
         checkinType: input.type,
         result: "VALID",
       },
@@ -119,9 +134,7 @@ export async function performCheckin(input: { token: string; type: "GYM" | "PT" 
       input.type === "PT"
         ? `Xác thực thành công. Còn ${updated?.ptSessionsLeft ?? 0} buổi PT.`
         : "Xác thực thành công — chào mừng bạn!",
-    memberName: membership.customer.fullName,
-    memberCode: membership.memberCode,
-    endDate: membership.endDate,
+    ...memberMeta,
     ptSessionsLeft: updated?.ptSessionsLeft ?? membership.ptSessionsLeft,
   };
 }

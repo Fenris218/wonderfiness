@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, QrCode, ScanLine, XCircle } from "lucide-react";
+import { AlertCircle, Camera, CheckCircle2, Loader2, QrCode, ScanLine, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QrScanner } from "@/components/admin/qr-scanner";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,9 @@ type Result = {
   memberCode?: string;
   endDate?: string;
   ptSessionsLeft?: number | null;
+  ptSessionsTotal?: number | null;
+  packageType?: string;
+  branchName?: string;
   duplicate?: boolean;
 };
 
@@ -24,18 +28,18 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitToken(tokenValue: string) {
     setError(null);
     setResult(null);
-    if (!token.trim()) return;
+    if (!tokenValue.trim()) return;
     setLoading(true);
     try {
       const res = await fetch("/api/v1/admin/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: token.trim(), type }),
+        body: JSON.stringify({ token: tokenValue.trim(), type }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message ?? "Không xác thực được.");
@@ -43,12 +47,19 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
       if (json.data.result === "VALID") {
         setToken("");
         router.refresh();
+      } else {
+        setToken(tokenValue);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    void submitToken(token);
   }
 
   const tone =
@@ -58,6 +69,13 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
       ? "border-amber-200 bg-amber-50 text-amber-800"
       : "border-rose-200 bg-rose-50 text-rose-800";
 
+  const invalidTitle =
+    result?.packageType && result.packageType !== "PT"
+      ? "Hội viên không có gói PT"
+      : result?.ptSessionsTotal !== undefined
+      ? "Không thể trừ buổi PT"
+      : "Không xác thực được";
+
   return (
     <div className="card p-6">
       <div className="flex items-center gap-2">
@@ -66,20 +84,33 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
         </span>
         <div>
           <h2 className="text-sm font-bold text-ink">Quét / nhập mã hội viên</h2>
-          <p className="text-[11.5px] text-ink/45">Máy quét QR hoạt động như bàn phím — quét là tự nhập.</p>
+          <p className="text-[11.5px] text-ink/45">
+            Dùng camera điện thoại hoặc máy quét QR / nhập mã thủ công.
+          </p>
         </div>
       </div>
 
       <form onSubmit={submit} className="mt-5 space-y-3">
-        <div className="relative">
-          <QrCode className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/25" />
-          <input
-            autoFocus
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="WF-HV-0001 hoặc nội dung QR"
-            className="input pl-10 font-mono text-[13px]"
-          />
+        <div className="flex gap-2">
+          <div className="relative min-w-0 flex-1">
+            <QrCode className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/25" />
+            <input
+              autoFocus
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="WF-HV-0001 hoặc nội dung QR"
+              className="input pl-10 font-mono text-[13px]"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setScanOpen(true)}
+            disabled={disabled}
+            className="shrink-0 px-4"
+          >
+            <Camera className="h-4 w-4" /> Quét QR
+          </Button>
         </div>
 
         <div className="flex gap-2">
@@ -115,7 +146,7 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
       ) : null}
 
       {result ? (
-        <div className={cn("mt-5 rounded-2xl border p-4 animate-scale-in", tone)}>
+        <div className={cn("mt-5 rounded-2xl border p-4 animate-scale-in", tone)} role="alert">
           <div className="flex items-start gap-2.5">
             {result.result === "VALID" ? (
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
@@ -132,13 +163,14 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
                     : "Check-in thành công"
                   : result.result === "EXPIRED"
                   ? "Thẻ không hợp lệ"
-                  : "Không xác thực được"}
+                  : invalidTitle}
               </p>
               <p className="mt-0.5 text-[12.5px] opacity-80">{result.message}</p>
               {result.memberName ? (
                 <div className="mt-2.5 grid gap-0.5 border-t border-current/10 pt-2 text-[12px] opacity-90">
                   <p className="font-semibold">{result.memberName}</p>
                   <p className="font-mono">{result.memberCode}</p>
+                  {result.branchName ? <p>Chi nhánh: {result.branchName}</p> : null}
                   {result.endDate ? <p>HSD: {formatDate(result.endDate)}</p> : null}
                   {typeof result.ptSessionsLeft === "number" ? <p>Còn {result.ptSessionsLeft} buổi PT</p> : null}
                 </div>
@@ -147,6 +179,15 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
           </div>
         </div>
       ) : null}
+
+      <QrScanner
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onDetected={(value) => {
+          setToken(value);
+          void submitToken(value);
+        }}
+      />
     </div>
   );
 }
