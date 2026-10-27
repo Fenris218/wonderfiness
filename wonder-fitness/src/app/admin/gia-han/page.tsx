@@ -32,7 +32,7 @@ export default async function AdminRenewalsPage() {
         lastContactAt: m.contacts[0]?.contactTime?.toISOString() ?? null,
         emailSentAt,
         lastCallAt: m.lastReminderCallAt?.toISOString() ?? null,
-        callEnabled: Boolean(emailSentAt && phone && !renewed),
+        callEnabled: Boolean(emailSentAt && phone && !renewed && !m.lastReminderCallAt),
         renewed,
       };
     })

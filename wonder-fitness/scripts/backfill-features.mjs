@@ -3,13 +3,13 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const TRAINER_RATES = {
-  "Trần Quốc Việt": 500000,
-  "Nguyễn Thị Lan": 420000,
-  "Lê Hoàng Phúc": 550000,
-  "Phạm Minh Châu": 480000,
-  "Võ Thanh Sơn": 450000,
-  "Đặng Thu Trang": 350000,
-  "Bùi Anh Khoa": 520000,
+  "Trần Quốc Việt": 800000,
+  "Nguyễn Thị Lan": 450000,
+  "Lê Hoàng Phúc": 1000000,
+  "Phạm Minh Châu": 600000,
+  "Võ Thanh Sơn": 500000,
+  "Đặng Thu Trang": 300000,
+  "Bùi Anh Khoa": 700000,
   "Nguyễn Mai Phương": 400000,
 };
 

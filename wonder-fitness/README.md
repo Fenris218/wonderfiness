@@ -23,6 +23,28 @@ docker compose logs -f web
 
 Container web tự đồng bộ schema (`prisma db push`) và seed dữ liệu demo khi database trống.
 
+### HTTPS cho LAN (quét QR bằng camera điện thoại)
+
+Trình duyệt chỉ cho phép `getUserMedia` (mở camera) trong **secure context** — tức `https://`
+hoặc `localhost`. Mở `http://<IP-Wi-Fi>:3000` trên điện thoại thì nút **Quét QR** sẽ bị chặn.
+
+Repo có sẵn service `https` (nginx + chứng chỉ tự ký) trong `docker-compose.yml`:
+
+```bash
+npm run docker:up
+# → https://<IP-Wi-Fi>:3443   (dùng cho camera quét QR)
+# → http://<IP-Wi-Fi>:3000    (dùng bình thường, không cần camera)
+```
+
+- Chứng chỉ tự ký nên lần đầu trình duyệt cảnh báo: bấm **Nâng cao → Tiếp tục truy cập**
+  (Chrome/Edge) hoặc **Truy cập trang web** (Safari) rồi mới dùng được camera.
+- Chứng chỉ được cấp theo IP LAN hiện tại (`docker/https/40-selfsigned-cert.sh`). Đổi Wi-Fi
+  thì chạy lại `npm run docker:up` (hoặc `docker compose restart https`) để cấp lại.
+- Muốn email/nhắc gia hạn chứa link HTTPS: đặt `NEXT_PUBLIC_APP_URL="https://<IP-Wi-Fi>:3443"`
+  trong `docker-compose.yml`. Cookie session chỉ bật `Secure` khi request thật sự đi qua HTTPS,
+  nên vẫn đăng nhập được bằng `http://localhost:3000`.
+
+
 ## Chạy local
 
 ```bash

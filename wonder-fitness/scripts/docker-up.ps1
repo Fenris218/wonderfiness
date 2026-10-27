@@ -49,8 +49,15 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "▸ Trên máy này:      http://localhost:3000"
-Write-Host "▸ Trên điện thoại:   http://${ip}:3000" -ForegroundColor Green
+Write-Host "▸ Trên máy này:       http://localhost:3000"
+Write-Host "▸ Trên điện thoại:    http://${ip}:3000" -ForegroundColor Green
+Write-Host "▸ HTTPS (quét QR):    https://${ip}:3443" -ForegroundColor Green
 Write-Host ""
 Write-Host "Lưu ý: dòng 'Network: http://172.x.x.x:3000' do Next.js in ra là IP nội bộ"
 Write-Host "của container, không phải IP Wi-Fi. Dùng địa chỉ in ở trên để mở từ điện thoại."
+Write-Host ""
+Write-Host "Quét QR bằng camera trên điện thoại: mở https://${ip}:3443" -ForegroundColor Cyan
+Write-Host "  - Chứng chỉ là tự ký nên trình duyệt sẽ cảnh báo lần đầu:"
+Write-Host "    bấm 'Nâng cao' → 'Tiếp tục truy cập' (Chrome) hoặc 'Truy cập trang web' (Safari)."
+Write-Host "  - Sau khi vào bằng https, nút 'Quét QR' sẽ mở được camera."
+Write-Host "  - Nếu đổi Wi-Fi/đổi IP: chạy lại script này để cấp lại chứng chỉ."

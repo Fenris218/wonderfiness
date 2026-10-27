@@ -46,13 +46,13 @@ const CUSTOMER_NAMES = [
 ];
 
 const TRAINERS = [
-  { name: "Trần Quốc Việt", spec: "Tăng cơ · Giảm mỡ", cert: "NASM-CPT, ACE", years: 7, rate: 500000, photo: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80" },
-  { name: "Nguyễn Thị Lan", spec: "Yoga · Phục hồi", cert: "RYT-500, FRC", years: 5, rate: 420000, photo: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=600&q=80" },
-  { name: "Lê Hoàng Phúc", spec: "Powerlifting", cert: "CSCS, IPF Coach", years: 8, rate: 550000, photo: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=600&q=80" },
-  { name: "Phạm Minh Châu", spec: "Giảm mỡ · Dinh dưỡng", cert: "ACE-CPT, PN1", years: 4, rate: 480000, photo: "https://images.unsplash.com/photo-1549476464-37392f717541?w=600&q=80" },
-  { name: "Võ Thanh Sơn", spec: "Boxing · Cardio", cert: "NASM-CPT", years: 6, rate: 450000, photo: "https://images.unsplash.com/photo-1550345332-09e3ac987658?w=600&q=80" },
-  { name: "Đặng Thu Trang", spec: "Zumba · Dance Fitness", cert: "Zumba ZIN", years: 3, rate: 350000, photo: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80" },
-  { name: "Bùi Anh Khoa", spec: "Tăng cơ · Sức mạnh", cert: "NSCA-CPT", years: 5, rate: 520000, photo: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80" },
+  { name: "Trần Quốc Việt", spec: "Tăng cơ · Giảm mỡ", cert: "NASM-CPT, ACE", years: 7, rate: 800000, photo: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80" },
+  { name: "Nguyễn Thị Lan", spec: "Yoga · Phục hồi", cert: "RYT-500, FRC", years: 5, rate: 450000, photo: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=600&q=80" },
+  { name: "Lê Hoàng Phúc", spec: "Powerlifting", cert: "CSCS, IPF Coach", years: 8, rate: 1000000, photo: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=600&q=80" },
+  { name: "Phạm Minh Châu", spec: "Giảm mỡ · Dinh dưỡng", cert: "ACE-CPT, PN1", years: 4, rate: 600000, photo: "https://images.unsplash.com/photo-1549476464-37392f717541?w=600&q=80" },
+  { name: "Võ Thanh Sơn", spec: "Boxing · Cardio", cert: "NASM-CPT", years: 6, rate: 500000, photo: "https://images.unsplash.com/photo-1550345332-09e3ac987658?w=600&q=80" },
+  { name: "Đặng Thu Trang", spec: "Zumba · Dance Fitness", cert: "Zumba ZIN", years: 3, rate: 300000, photo: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80" },
+  { name: "Bùi Anh Khoa", spec: "Tăng cơ · Sức mạnh", cert: "NSCA-CPT", years: 5, rate: 700000, photo: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80" },
   { name: "Nguyễn Mai Phương", spec: "Yoga · Pilates", cert: "RYT-200, Mat Pilates", years: 4, rate: 400000, photo: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80" },
 ];
 

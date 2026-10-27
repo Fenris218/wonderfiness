@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PriceCard, type PackageCardData, type PriceRange } from "@/components/catalog/price-card";
+import { PriceCard, type PackageCardData } from "@/components/catalog/price-card";
 import { TrainerShowcase, type ShowcaseTrainer } from "@/components/catalog/trainer-showcase";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
-  { id: "ALL", label: "Tất cả" },
   { id: "GYM", label: "Gym" },
   { id: "PT", label: "PT 1-1" },
 ] as const;
@@ -18,35 +17,19 @@ export function PackageGrid({
   trainers = [],
   ptPackageId = null,
   ptSessionCount = null,
-  ptPriceRange = null,
-  initialFilter = "ALL",
+  initialFilter = "GYM",
 }: {
   packages: PackageCardData[];
   trainers?: ShowcaseTrainer[];
   ptPackageId?: number | null;
   ptSessionCount?: number | null;
-  ptPriceRange?: { min: number; max: number } | null;
   initialFilter?: Filter;
 }) {
   const [filter, setFilter] = useState<Filter>(initialFilter);
 
-  const list = useMemo(
-    () => (filter === "ALL" ? packages : packages.filter((p) => p.packageType === filter)),
-    [filter, packages]
-  );
-
-  function priceRangeFor(pkg: PackageCardData): PriceRange | undefined {
-    if (pkg.packageType !== "PT" || !ptPriceRange || ptPriceRange.max <= 0 || !pkg.sessionCount) {
-      return undefined;
-    }
-    return {
-      min: ptPriceRange.min * pkg.sessionCount,
-      max: ptPriceRange.max * pkg.sessionCount,
-      minPerSession: ptPriceRange.min,
-      maxPerSession: ptPriceRange.max,
-      sessions: pkg.sessionCount,
-    };
-  }
+  // PT không bán theo gói đồng giá: tab PT 1-1 hiển thị danh sách HLV với
+  // học phí riêng từng người, nên bảng giá chỉ còn các gói Gym.
+  const gymPackages = useMemo(() => packages.filter((p) => p.packageType === "GYM"), [packages]);
 
   return (
     <div>
@@ -70,17 +53,19 @@ export function PackageGrid({
 
       {filter === "PT" ? (
         <TrainerShowcase trainers={trainers} ptPackageId={ptPackageId} sessionCount={ptSessionCount} />
-      ) : null}
+      ) : (
+        <>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {gymPackages.map((pkg) => (
+              <PriceCard key={pkg.packageId} pkg={pkg} />
+            ))}
+          </div>
 
-      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((pkg) => (
-          <PriceCard key={pkg.packageId} pkg={pkg} priceRange={priceRangeFor(pkg)} />
-        ))}
-      </div>
-
-      {list.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-ink/50">Chưa có gói tập trong nhóm này.</p>
-      ) : null}
+          {gymPackages.length === 0 ? (
+            <p className="mt-10 text-center text-sm text-ink/50">Chưa có gói tập trong nhóm này.</p>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

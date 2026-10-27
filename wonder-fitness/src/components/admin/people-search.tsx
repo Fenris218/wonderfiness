@@ -4,7 +4,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search } from "lucide-react";
 
-export function PeopleSearch({ defaultValue, placeholder }: { defaultValue?: string; placeholder?: string }) {
+export function PeopleSearch({
+  defaultValue,
+  placeholder,
+  action = "/admin/hoi-vien",
+}: {
+  defaultValue?: string;
+  placeholder?: string;
+  action?: string;
+}) {
   const router = useRouter();
   const [value, setValue] = useState(defaultValue ?? "");
 
@@ -12,7 +20,7 @@ export function PeopleSearch({ defaultValue, placeholder }: { defaultValue?: str
     e.preventDefault();
     const params = new URLSearchParams();
     if (value.trim()) params.set("q", value.trim());
-    router.push(`/admin/hoi-vien${params.toString() ? `?${params.toString()}` : ""}`);
+    router.push(`${action}${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
   return (

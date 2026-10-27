@@ -6,6 +6,8 @@ import {
   BarChart3,
   CalendarCheck,
   ClipboardList,
+  Contact,
+  Dumbbell,
   LayoutDashboard,
   RefreshCw,
   Tags,
@@ -21,10 +23,12 @@ const NAV: NavItem[] = [
   { href: "/admin", label: "Tổng quan", icon: LayoutDashboard },
   { href: "/admin/leads", label: "Khách tiềm năng", icon: ClipboardList },
   { href: "/admin/hoi-vien", label: "Hội viên", icon: Users },
+  { href: "/admin/khach-hang", label: "Khách hàng", icon: Contact, adminOnly: true },
   { href: "/admin/checkin", label: "Check-in QR", icon: CalendarCheck },
   { href: "/admin/gia-han", label: "Gia hạn", icon: RefreshCw },
   { href: "/admin/bao-cao", label: "Báo cáo", icon: BarChart3 },
   { href: "/admin/danh-muc", label: "Danh mục", icon: Tags, adminOnly: true },
+  { href: "/admin/huan-luyen-vien", label: "Huấn luyện viên", icon: Dumbbell, adminOnly: true },
   { href: "/admin/nhan-vien", label: "Nhân viên", icon: UserCog, adminOnly: true },
 ];
 

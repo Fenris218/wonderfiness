@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireAdmin } from "@/server/auth";
 import { getBranches, getPackages, getTrainers } from "@/server/modules/catalog.service";
 import { formatVND } from "@/lib/format";
@@ -18,7 +19,11 @@ export default async function AdminCatalogPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">Cấu hình</p>
         <h1 className="mt-1.5 text-2xl font-extrabold tracking-tight text-ink">Danh mục hệ thống</h1>
         <p className="mt-1 text-[13px] text-ink/50">
-          Gói tập, chi nhánh và huấn luyện viên. Bản demo hiển thị dữ liệu seed — chức năng thêm/sửa nằm trong roadmap.
+          Gói tập, chi nhánh và huấn luyện viên. Hồ sơ PT và học phí từng người được quản lý tại mục{" "}
+          <Link href="/admin/huan-luyen-vien" className="font-semibold text-brand hover:underline">
+            Huấn luyện viên
+          </Link>
+          .
         </p>
       </div>
 
@@ -79,8 +84,11 @@ export default async function AdminCatalogPage() {
         </div>
 
         <div className="card overflow-hidden">
-          <div className="border-b border-line px-5 py-4">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <h2 className="text-sm font-bold text-ink">Huấn luyện viên ({trainers.length})</h2>
+            <Link href="/admin/huan-luyen-vien" className="text-[11.5px] font-semibold text-brand hover:underline">
+              Quản lý PT →
+            </Link>
           </div>
           <ul className="divide-y divide-line">
             {trainers.map((t) => (

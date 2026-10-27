@@ -106,6 +106,8 @@
 | Check-in QR | ✅ | ✅ (nếu có hồ sơ nhân viên) |
 | Nhắc gia hạn | Thẻ chi nhánh mình | Tất cả |
 | Báo cáo | Số liệu chi nhánh | Toàn hệ thống |
+| Sửa hồ sơ khách hàng | Không thấy menu | ✅ |
+| Quản lý PT (thêm/sửa/xoá, giá/buổi) | Không thấy menu | ✅ |
 | Danh mục | Không thấy menu | ✅ |
 
 ### 2.2 Quản lý khách tiềm năng (lead)
@@ -124,8 +126,10 @@
 ### 2.3 Check-in hội viên
 
 1. Menu **Check-in QR**.
-2. Đưa con trỏ vào ô nhập — máy quét QR hoạt động như bàn phím, quét là tự điền.
-3. Chọn **Vào tập Gym** hoặc **Buổi PT (trừ 1 buổi)** → **Xác thực**.
+2. Bấm **Quét QR** rồi đưa mã QR của khách lại gần camera — hệ thống tự nhận diện và check-in, không cần bấm xác thực.
+   Trên điện thoại phải mở bằng **https://<IP-Wi-Fi>:3443** (xem mục 3.3.1) thì camera mới hoạt động;
+   nếu chỉ có HTTP, dùng nút **Chụp ảnh QR** thay cho camera trực tiếp.
+3. Chọn **Vào tập Gym** hoặc **Buổi PT (trừ 1 buổi)** → **Xác thực** (khi nhập mã thủ công).
 
 **Kết quả có thể gặp**
 
@@ -145,8 +149,9 @@
 ### 2.4 Nhắc gia hạn
 
 1. Menu **Gia hạn** — danh sách thẻ còn ≤ 10 ngày.
-2. Nhấn **Nhắc gia hạn**: hệ thống ghi một nhật ký liên hệ kênh Zalo (demo, không gửi tin thật).
-3. Cột *Nhắc gần nhất* cập nhật, nút chuyển thành **Đã nhắc**.
+2. Hệ thống tự gửi email nhắc (một lần/thẻ) tới email đã xác thực OTP.
+3. Sau khi email được gửi, nút **Gọi điện** mở dialer với số thật của hội viên. Mỗi thẻ chỉ gọi nhắc **một lần**:
+   bấm xong nút chuyển ngay thành **Đã liên hệ** (server cũng chặn cuộc gọi thứ hai).
 
 ### 2.5 Báo cáo & dashboard
 
@@ -157,6 +162,21 @@
 ### 2.6 Danh mục (chỉ ADMIN)
 
 Xem toàn bộ gói tập, chi nhánh, huấn luyện viên. Bản demo là **chỉ đọc**; chức năng thêm/sửa/xoá nằm trong roadmap.
+
+### 2.7 Quản lý khách hàng (chỉ ADMIN)
+
+1. Menu **Khách hàng** — danh sách toàn bộ khách hàng kèm thẻ hội viên gần nhất.
+2. Tìm theo tên, số điện thoại hoặc email.
+3. Nhấn **Sửa** để cập nhật họ tên, số điện thoại, email, giới tính, ngày sinh.
+4. Đổi email sẽ reset xác thực: khách cần xác thực OTP lại trước khi nhận nhắc gia hạn qua email.
+
+### 2.8 Quản lý huấn luyện viên PT (chỉ ADMIN)
+
+1. Menu **Huấn luyện viên** — danh sách toàn bộ PT, gồm cả PT đã ngưng hoạt động.
+2. **Thêm PT**: họ tên, chi nhánh, chuyên môn, giá/buổi, kinh nghiệm, đánh giá, chứng chỉ, ảnh, giới thiệu.
+3. **Sửa**: cập nhật hồ sơ hoặc đổi giá/buổi. Giá này hiển thị ở trang Gói tập và dùng để tính tổng tiền gói PT.
+4. **Ngưng / Kích hoạt**: PT ngưng sẽ không hiện cho khách chọn HLV nhưng vẫn giữ lịch sử đơn.
+5. **Xoá**: PT chưa có đơn nào thì xoá hẳn; PT đã có đơn sẽ tự chuyển sang *Ngưng hoạt động* để bảo toàn dữ liệu.
 
 ---
 
@@ -220,6 +240,7 @@ docker compose logs -f web     # xem quá trình migrate + seed
 
 - `db`: PostgreSQL 16, volume `wonder_pgdata`, healthcheck `pg_isready`.
 - `web`: Next.js production, tự động `prisma db push` và seed **chỉ khi DB trống**.
+- `https`: nginx reverse proxy + chứng chỉ tự ký, phục vụ HTTPS cho LAN.
 - Truy cập http://localhost:3000. Dừng: `docker compose down`. Xoá sạch dữ liệu: `docker compose down -v`.
 
 **Cổng đang dùng**
@@ -227,9 +248,35 @@ docker compose logs -f web     # xem quá trình migrate + seed
 | Service | Port |
 | --- | --- |
 | web | 3000 |
+| https | 3443 |
 | db | 5432 |
 
 Đổi cổng web: sửa `ports: "8080:3000"` trong `docker-compose.yml`.
+
+### 3.3.1 Quét QR bằng camera điện thoại cần HTTPS
+
+Trình duyệt chỉ cho phép mở camera (`getUserMedia`) trong **secure context** — `https://` hoặc
+`localhost`. Vì vậy mở `http://<IP-Wi-Fi>:3000` trên điện thoại thì nút **Quét QR** sẽ báo cần HTTPS,
+chỉ còn cách **Chụp ảnh QR** (dùng app camera gốc của máy).
+
+Cách chạy đúng:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/docker-up.ps1
+# → http://localhost:3000
+# → http://<IP-Wi-Fi>:3000
+# → https://<IP-Wi-Fi>:3443   ← mở địa chỉ này trên điện thoại để quét QR
+```
+
+1. Trên điện thoại mở `https://<IP-Wi-Fi>:3443`.
+2. Trình duyệt cảnh báo chứng chỉ tự ký → **Nâng cao → Tiếp tục truy cập** (Chrome/Edge) hoặc
+   **Truy cập trang web** (Safari). Chỉ cần làm một lần cho mỗi IP.
+3. Đăng nhập bằng tài khoản nhân viên → **Check-in QR** → **Quét QR** → camera mở bình thường.
+4. Đổi Wi-Fi/đổi IP LAN: chạy lại `scripts/docker-up.ps1` để cấp lại chứng chỉ đúng IP mới.
+
+> Chứng chỉ nằm trong volume `wonder_certs`, sinh tự động bởi `docker/https/40-selfsigned-cert.sh`
+> với SAN gồm `localhost`, `127.0.0.1` và IP LAN hiện tại.
+
 
 ### 3.4 Biến môi trường
 
@@ -237,7 +284,8 @@ docker compose logs -f web     # xem quá trình migrate + seed
 | --- | --- | --- |
 | `DATABASE_URL` | ✅ | Chuỗi kết nối PostgreSQL |
 | `AUTH_SECRET` | ✅ (prod) | Khoá ký JWT, ≥ 32 ký tự |
-| `NEXT_PUBLIC_APP_URL` | — | URL công khai. Nếu bắt đầu bằng `https://`, cookie session sẽ bật cờ `Secure`. |
+| `NEXT_PUBLIC_APP_URL` | — | URL công khai dùng trong email/nhắc gia hạn. Cookie session tự bật cờ `Secure` khi request đi qua HTTPS (proxy cổng 3443), nên đặt `https://<IP-Wi-Fi>:3443` vẫn đăng nhập được bằng `http://localhost:3000`. |
+| `LAN_IP` | — | IP Wi-Fi/Ethernet của máy chạy Docker. `scripts/docker-up.ps1` tự dò và truyền vào; proxy HTTPS dùng IP này để cấp chứng chỉ tự ký đúng tên miền. |
 | `SEED_DB` | — | `true` để tự seed khi DB trống (mặc định trong compose) |
 | `DEMO_MODE` | — | Cờ đánh dấu môi trường demo |
 
@@ -350,6 +398,9 @@ npm run db:reset     # reset + seed
 | Gmail báo `Invalid login` | App Password bị thu hồi hoặc 2FA chưa bật. Tạo App Password mới tại myaccount.google.com/apppasswords. |
 | Next.js in `Network: http://172.x.x.x:3000` | Đó là IP **nội bộ container**, không phải IP Wi-Fi. Chạy `npm run docker:up` (hoặc `scripts/docker-up.ps1`) để tự dò IPv4 Wi-Fi và in đúng địa chỉ `http://<IP-Wi-Fi>:3000`. |
 | Điện thoại không mở được `http://<IP>:3000` | Điện thoại và máy tính phải cùng Wi-Fi; kiểm tra Windows Firewall cho Docker Desktop; dùng `npm run docker:up` để lấy đúng IP. |
+| Camera QR không mở, báo “cần HTTPS” | Mở `https://<IP-Wi-Fi>:3443` thay vì HTTP. Nếu vẫn lỗi, kiểm tra container `wonder-https` đang chạy: `docker compose ps` và `docker compose logs https`. |
+| Trình duyệt cảnh báo “Không phải kết nối riêng tư” | Bình thường với chứng chỉ tự ký: **Nâng cao → Tiếp tục truy cập**. Sau khi đổi Wi-Fi, chạy lại `npm run docker:up` để cấp lại chứng chỉ đúng IP mới. |
+| Đã đổi Wi-Fi nhưng HTTPS vẫn báo sai tên miền | Chứng chỉ cũ còn trong volume: `docker compose restart https` (script tự phát hiện IP mới) hoặc `docker volume rm wonder-fitness_wonder_certs` rồi `docker compose up -d https`. |
 | Check-in báo “chưa gắn chi nhánh” | Tài khoản ADMIN không có hồ sơ `staff`. Dùng `staff@wonder.vn` để test check-in. |
 
 ### 3.11 Giới hạn của bản demo

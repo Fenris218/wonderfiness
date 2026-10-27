@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { BellRing, Check, Loader2, Mail, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { daysLeft, formatDate } from "@/lib/format";
+import { daysLeft, formatDate, formatDateTime } from "@/lib/format";
 
 export type RenewalRow = {
   membershipId: number;
@@ -45,7 +45,7 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
                 ...r,
                 lastContactAt: now,
                 emailSentAt: row.email ? now : r.emailSentAt,
-                callEnabled: Boolean(row.email && row.phone),
+                callEnabled: Boolean(row.email && row.phone && !r.lastCallAt),
               }
             : r
         )
@@ -57,10 +57,34 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
     }
   }
 
-  function logCall(id: number) {
+  async function logCall(row: RenewalRow) {
+    if (row.lastCallAt) return;
     const now = new Date().toISOString();
-    setItems((prev) => prev.map((r) => (r.membershipId === id ? { ...r, lastCallAt: now } : r)));
-    void fetch(`/api/v1/admin/renewals/${id}/call`, { method: "POST", keepalive: true }).catch(() => undefined);
+    setError(null);
+    // Đổi nút ngay khi bấm để tránh gọi 2 lần; server cũng chặn lần thứ hai.
+    setItems((prev) =>
+      prev.map((r) =>
+        r.membershipId === row.membershipId ? { ...r, lastCallAt: now, callEnabled: false } : r
+      )
+    );
+    try {
+      const res = await fetch(`/api/v1/admin/renewals/${row.membershipId}/call`, {
+        method: "POST",
+        keepalive: true,
+      });
+      // 409 = đã liên hệ trước đó (tab khác/bấm đúp) — giữ nguyên trạng thái "Đã liên hệ".
+      if (!res.ok && res.status !== 409) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error?.message ?? "Không ghi nhận được cuộc gọi.");
+      }
+    } catch (err) {
+      setItems((prev) =>
+        prev.map((r) =>
+          r.membershipId === row.membershipId ? { ...r, lastCallAt: null, callEnabled: true } : r
+        )
+      );
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+    }
   }
 
   if (items.length === 0) {
@@ -120,15 +144,17 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[11.5px] text-ink/45">
-                      {r.emailSentAt ? (
-                        <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
-                          <Mail className="h-3 w-3" /> Đã gửi email
-                        </span>
-                      ) : r.lastContactAt ? (
-                        formatDate(r.lastContactAt)
-                      ) : (
-                        "—"
-                      )}
+                      <div className="flex flex-col items-start gap-1">
+                        {r.emailSentAt ? (
+                          <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
+                            <Mail className="h-3 w-3" /> Đã gửi email
+                          </span>
+                        ) : null}
+                        {r.lastCallAt ? (
+                          <span className="text-ink/50">Đã gọi {formatDateTime(r.lastCallAt)}</span>
+                        ) : null}
+                        {!r.emailSentAt && !r.lastCallAt ? (r.lastContactAt ? formatDate(r.lastContactAt) : "—") : null}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
@@ -154,10 +180,14 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
                               </Button>
                             ) : null}
 
-                            {r.callEnabled && r.phone ? (
+                            {r.lastCallAt ? (
+                              <span className="chip bg-sky-50 text-sky-700 ring-sky-200" title={`Đã gọi ${formatDateTime(r.lastCallAt)}`}>
+                                <Check className="h-3 w-3" /> Đã liên hệ
+                              </span>
+                            ) : r.callEnabled && r.phone ? (
                               <a
                                 href={`tel:${r.phone}`}
-                                onClick={() => logCall(r.membershipId)}
+                                onClick={() => void logCall(r)}
                                 className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-600 px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-emerald-700"
                               >
                                 <PhoneCall className="h-3.5 w-3.5" /> Gọi điện
@@ -180,8 +210,8 @@ export function RenewalList({ rows }: { rows: RenewalRow[] }) {
       </div>
 
       <p className="flex items-center gap-1.5 text-[11.5px] text-ink/40">
-        <Mail className="h-3.5 w-3.5" /> Email nhắc được gửi thật tới email đã xác thực OTP. Nút “Gọi điện” mở dialer
-        với số thật của hội viên (cần điện thoại hỗ trợ gọi).
+        <Mail className="h-3.5 w-3.5" /> Email nhắc được gửi thật tới email đã xác thực OTP. Nút “Gọi điện” chỉ hiện một
+        lần cho mỗi thẻ — sau khi gọi sẽ chuyển thành “Đã liên hệ”.
       </p>
     </div>
   );

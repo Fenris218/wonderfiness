@@ -56,10 +56,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Online
               </span>
-              <div className="hidden sm:block">
-                <LogoutButton />
-              </div>
-              <div className="sm:hidden">
+              <div className="lg:hidden">
                 <LogoutButton compact />
               </div>
             </div>

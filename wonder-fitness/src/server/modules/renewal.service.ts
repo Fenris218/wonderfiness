@@ -103,6 +103,20 @@ export async function markRenewalCall(membershipId: number, session: Session) {
   });
   if (!membership) throw new AppError("MEMBERSHIP_NOT_FOUND", 404, "Không tìm thấy thẻ.");
 
+  // Mỗi thẻ chỉ được gọi nhắc một lần. Claim nguyên tử để hai tab/bấm đúp
+  // không tạo được hai cuộc gọi.
+  const claim = await prisma.membership.updateMany({
+    where: { membershipId, lastReminderCallAt: null },
+    data: { lastReminderCallAt: new Date() },
+  });
+  if (claim.count === 0) {
+    throw new AppError(
+      "RENEWAL_ALREADY_CALLED",
+      409,
+      "Hội viên này đã được liên hệ trước đó — mỗi thẻ chỉ gọi nhắc một lần."
+    );
+  }
+
   const contact = await prisma.contactLog.create({
     data: {
       membershipId,
@@ -113,10 +127,5 @@ export async function markRenewalCall(membershipId: number, session: Session) {
     },
   });
 
-  await prisma.membership.update({
-    where: { membershipId },
-    data: { lastReminderCallAt: new Date() },
-  });
-
-  return { contact };
+  return { contact, calledAt: new Date().toISOString() };
 }

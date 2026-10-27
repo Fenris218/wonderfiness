@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getBranches, getPackages, getTrainerPriceRange, getTrainers } from "@/server/modules/catalog.service";
+import { getBranches, getPackages, getTrainers } from "@/server/modules/catalog.service";
 import { PackageGrid } from "@/components/catalog/package-grid";
 import { SectionTitle } from "@/components/ui/badge";
 import { BadgeCheck, CreditCard, QrCode, RefreshCw } from "lucide-react";
@@ -24,22 +24,15 @@ export default async function PackagesPage({
   searchParams: Promise<{ type?: string }>;
 }) {
   const { type } = await searchParams;
-  const [allPackages, branches, trainers, ptPriceRange] = await Promise.all([
-    getPackages(),
-    getBranches(),
-    getTrainers(),
-    getTrainerPriceRange(),
-  ]);
+  const [allPackages, branches, trainers] = await Promise.all([getPackages(), getBranches(), getTrainers()]);
 
-  // Yoga/Zumba chuyển sang tab "Lịch Yoga/Zumba" — chỉ bán Gym và PT ở bảng giá.
-  const packages = allPackages.filter((p) => p.packageType === "GYM" || p.packageType === "PT");
+  // Yoga/Zumba chuyển sang tab "Lịch Yoga/Zumba" — bảng giá chỉ còn gói Gym.
+  // PT 1-1 bán theo buổi với học phí riêng của từng HLV, không dùng gói đồng giá.
+  const packages = allPackages.filter((p) => p.packageType === "GYM");
 
-  const ptPackage = packages.find((p) => p.packageType === "PT") ?? null;
-  const TYPES = ["GYM", "PT"] as const;
+  const ptPackage = allPackages.find((p) => p.packageType === "PT") ?? null;
   const requested = (type ?? "").toUpperCase();
-  const initialFilter = TYPES.includes(requested as (typeof TYPES)[number])
-    ? (requested as (typeof TYPES)[number])
-    : "ALL";
+  const initialFilter = requested === "PT" ? "PT" : "GYM";
 
   return (
     <>
@@ -60,11 +53,11 @@ export default async function PackagesPage({
 
       <section className="container-page py-10 sm:py-14">
         <PackageGrid
+          key={initialFilter}
           packages={packages}
           trainers={trainers}
           ptPackageId={ptPackage?.packageId ?? null}
           ptSessionCount={ptPackage?.sessionCount ?? null}
-          ptPriceRange={ptPriceRange}
           initialFilter={initialFilter}
         />
       </section>

@@ -117,3 +117,38 @@ export const staffUpdateSchema = z.object({
   isActive: z.boolean().default(true),
   password: z.union([z.literal(""), z.string().min(6, "Mật khẩu tối thiểu 6 ký tự").max(72)]).optional(),
 });
+
+/** Admin cập nhật hồ sơ khách hàng (thông tin liên hệ + nhân khẩu). */
+export const adminCustomerUpdateSchema = z.object({
+  fullName: z.string().trim().min(2, "Vui lòng nhập họ tên").max(80, "Họ tên quá dài"),
+  phone: phoneSchema,
+  email: z.string().trim().toLowerCase().email("Email không hợp lệ").optional().or(z.literal("")),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional().or(z.literal("")),
+  dateOfBirth: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày sinh không hợp lệ")
+    .optional()
+    .or(z.literal("")),
+});
+
+/** Admin quản lý huấn luyện viên PT 1-1 (giá mỗi buổi theo từng người). */
+export const trainerCreateSchema = z.object({
+  fullName: z.string().trim().min(2, "Vui lòng nhập họ tên").max(80, "Họ tên quá dài"),
+  branchId: z.coerce.number().int().positive("Chọn chi nhánh"),
+  specialization: z.string().trim().min(2, "Nhập chuyên môn").max(120, "Chuyên môn quá dài"),
+  certificates: z.string().trim().max(200, "Chứng chỉ quá dài").optional().or(z.literal("")),
+  bio: z.string().trim().max(1000, "Giới thiệu quá dài").optional().or(z.literal("")),
+  photoUrl: z.string().trim().url("URL ảnh không hợp lệ").optional().or(z.literal("")),
+  rating: z.coerce.number().min(0, "Đánh giá từ 0 đến 5").max(5, "Đánh giá từ 0 đến 5").default(5),
+  experience: z.coerce.number().int("Số năm phải là số nguyên").min(0).max(60).default(1),
+  pricePerSession: z.coerce
+    .number()
+    .int("Giá/buổi phải là số nguyên")
+    .min(0, "Giá/buổi không âm")
+    .max(10_000_000, "Giá/buổi tối đa 10.000.000đ"),
+});
+
+export const trainerUpdateSchema = trainerCreateSchema.extend({
+  isActive: z.boolean().default(true),
+});

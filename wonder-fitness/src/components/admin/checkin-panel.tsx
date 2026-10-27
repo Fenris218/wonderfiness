@@ -85,7 +85,7 @@ export function CheckinPanel({ disabled }: { disabled?: boolean }) {
         <div>
           <h2 className="text-sm font-bold text-ink">Quét / nhập mã hội viên</h2>
           <p className="text-[11.5px] text-ink/45">
-            Dùng camera điện thoại hoặc máy quét QR / nhập mã thủ công.
+            Đưa mã QR lại gần camera — hệ thống tự nhận diện, hoặc nhập mã thủ công.
           </p>
         </div>
       </div>

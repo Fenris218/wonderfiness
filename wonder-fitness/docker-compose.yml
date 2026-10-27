@@ -44,5 +44,22 @@ services:
     ports:
       - "3000:3000"
 
+  # HTTPS tự ký cho LAN — cần thiết để trình duyệt điện thoại cho phép mở
+  # camera quét QR (getUserMedia chỉ chạy trong secure context).
+  https:
+    build:
+      context: ./docker/https
+    container_name: wonder-https
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      LAN_IP: "${LAN_IP:-}"
+    ports:
+      - "3443:3443"
+    volumes:
+      - wonder_certs:/etc/nginx/certs
+
 volumes:
   wonder_pgdata:
+  wonder_certs:
