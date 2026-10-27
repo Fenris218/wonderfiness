@@ -4,12 +4,7 @@ import type { Session } from "@/server/auth";
 import type { Prisma } from "@prisma/client";
 import type { z } from "zod";
 import type { orderSchema } from "@/lib/validation";
-
-function addMonths(date: Date, months: number) {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
-  return d;
-}
+import { addMonths } from "@/lib/date";
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
@@ -118,6 +113,7 @@ export async function confirmMockPayment(orderCodeValue: string, session: Sessio
   });
   if (!order) throw new AppError("ORDER_NOT_FOUND", 404, "Không tìm thấy đơn hàng.");
   if (order.customerId !== session.customerId) throw new AppError("FORBIDDEN", 403, "Không phải đơn của bạn.");
+  if (order.orderStatus === "CANCELLED") throw new AppError("ORDER_CANCELLED", 409, "Đơn đã bị huỷ.");
   if (order.orderStatus === "PAID" && order.membership) return order.membership;
 
   const membership = await prisma.$transaction(async (tx) => {
@@ -168,8 +164,62 @@ export async function confirmMockPayment(orderCodeValue: string, session: Sessio
   return membership;
 }
 
-export async function confirmCashPayment(orderCodeValue: string, session: Session) {
-  if (session.role === "CUSTOMER") throw new AppError("STAFF_ONLY", 403, "Chỉ nhân viên mới xác nhận.");
+/** Mô phỏng giao dịch thất bại: giữ đơn PENDING để hội viên thử lại. */
+export async function failMockPayment(orderCodeValue: string, session: Session, method?: string) {
+  const order = await prisma.registrationOrder.findUnique({
+    where: { orderCode: orderCodeValue },
+    include: { payments: true },
+  });
+  if (!order) throw new AppError("ORDER_NOT_FOUND", 404, "Không tìm thấy đơn hàng.");
+  if (order.customerId !== session.customerId) throw new AppError("FORBIDDEN", 403, "Không phải đơn của bạn.");
+  if (order.orderStatus === "PAID") throw new AppError("ORDER_ALREADY_PAID", 409, "Đơn đã được thanh toán.");
+  if (order.orderStatus === "CANCELLED") throw new AppError("ORDER_CANCELLED", 409, "Đơn đã bị huỷ.");
+
+  const payment = order.payments[0];
+  if (payment) {
+    await prisma.payment.update({
+      where: { paymentId: payment.paymentId },
+      data: { paymentStatus: "FAILED", paymentMethod: method || payment.paymentMethod },
+    });
+  }
+  return { orderCode: order.orderCode, status: "FAILED" as const };
+}
+
+/** Hội viên huỷ giao dịch đang chờ thanh toán (chỉ đơn của chính mình, chưa PAID). */
+export async function cancelMyOrder(orderCodeValue: string, session: Session) {
+  const order = await prisma.registrationOrder.findUnique({
+    where: { orderCode: orderCodeValue },
+    include: { payments: true },
+  });
+  if (!order) throw new AppError("ORDER_NOT_FOUND", 404, "Không tìm thấy đơn hàng.");
+  if (order.customerId !== session.customerId) throw new AppError("FORBIDDEN", 403, "Không phải đơn của bạn.");
+  if (order.orderStatus === "PAID") {
+    throw new AppError("ORDER_ALREADY_PAID", 409, "Đơn đã thanh toán — không thể huỷ.");
+  }
+  if (order.orderStatus === "CANCELLED") {
+    return { orderCode: order.orderCode, status: "CANCELLED" as const };
+  }
+
+  const payment = order.payments[0];
+  await prisma.$transaction([
+    prisma.registrationOrder.update({
+      where: { orderId: order.orderId },
+      data: { orderStatus: "CANCELLED" },
+    }),
+    ...(payment
+      ? [
+          prisma.payment.update({
+            where: { paymentId: payment.paymentId },
+            data: { paymentStatus: "FAILED" },
+          }),
+        ]
+      : []),
+  ]);
+
+  return { orderCode: order.orderCode, status: "CANCELLED" as const };
+}
+
+export async function confirmCashPayment(orderCodeValue: string, session: Session) {  if (session.role === "CUSTOMER") throw new AppError("STAFF_ONLY", 403, "Chỉ nhân viên mới xác nhận.");
   const order = await prisma.registrationOrder.findUnique({ where: { orderCode: orderCodeValue } });
   if (!order) throw new AppError("ORDER_NOT_FOUND", 404, "Không tìm thấy đơn hàng.");
   if (order.orderStatus === "PAID") return order;

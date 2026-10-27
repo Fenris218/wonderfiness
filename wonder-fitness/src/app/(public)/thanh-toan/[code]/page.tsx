@@ -5,6 +5,8 @@ import { ArrowLeft, BadgeCheck, CalendarClock, MapPin, Package, Printer, Ticket,
 import { getSession } from "@/server/auth";
 import { getOrderByCode } from "@/server/modules/order.service";
 import { formatDate, formatVND } from "@/lib/format";
+import { paymentQrPayload } from "@/lib/payment";
+import { qrDataUrl } from "@/server/qr";
 import { PaymentPanel } from "@/components/customer/payment-panel";
 
 export const metadata: Metadata = { title: "Thanh toán đơn hàng" };
@@ -26,6 +28,16 @@ export default async function CheckoutPage({ params }: { params: Promise<{ code:
     redirect(`/thanh-toan/ket-qua?code=${encodeURIComponent(order.orderCode)}`);
   }
 
+  const paymentQr = await qrDataUrl(
+    paymentQrPayload({ orderCode: order.orderCode, amount: order.totalAmount })
+  );
+  const initialPaymentStatus =
+    order.orderStatus === "CANCELLED"
+      ? ("cancelled" as const)
+      : order.payments[0]?.paymentStatus === "FAILED"
+      ? ("failed" as const)
+      : ("pending" as const);
+
   return (
     <section className="container-page py-10 sm:py-14">
       <Link href="/tai-khoan" className="inline-flex items-center gap-1.5 text-sm font-medium text-ink/50 hover:text-ink">
@@ -36,7 +48,11 @@ export default async function CheckoutPage({ params }: { params: Promise<{ code:
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Hoàn tất thanh toán</h1>
-            <span className="chip bg-amber-50 text-amber-700 ring-amber-200">Chờ thanh toán</span>
+            {order.orderStatus === "CANCELLED" ? (
+              <span className="chip bg-slate-100 text-slate-500 ring-slate-200">Đã huỷ</span>
+            ) : (
+              <span className="chip bg-amber-50 text-amber-700 ring-amber-200">Chờ thanh toán</span>
+            )}
           </div>
           <p className="mt-1 font-mono text-[13px] text-ink/45">Mã đơn: {order.orderCode}</p>
 
@@ -129,6 +145,8 @@ export default async function CheckoutPage({ params }: { params: Promise<{ code:
             orderCode={order.orderCode}
             amount={order.totalAmount}
             paymentOption={order.paymentOption}
+            qrDataUrl={paymentQr}
+            initialStatus={initialPaymentStatus}
           />
           <button
             type="button"

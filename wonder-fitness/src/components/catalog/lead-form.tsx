@@ -52,10 +52,7 @@ export function LeadForm({ branches, compact = false }: { branches: Branch[]; co
           <CheckCircle2 className="h-7 w-7" />
         </span>
         <h3 className="mt-5 text-xl font-bold text-ink">Đã nhận yêu cầu của bạn!</h3>
-        <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink/55">
-          Nhân viên Wonder chi nhánh bạn chọn sẽ gọi lại trong vòng <strong className="text-ink">15 phút</strong>{" "}
-          (trong giờ 08:00 – 21:00). Hãy chú ý điện thoại nhé.
-        </p>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink/55">Hãy chú ý điện thoại nhé!</p>
         <div className="mt-6 rounded-xl bg-surface px-4 py-3 text-left text-[12.5px] text-ink/60">
           <p className="font-semibold text-ink">Trong lúc chờ, bạn có thể:</p>
           <ul className="mt-1.5 grid gap-1">
@@ -81,7 +78,9 @@ export function LeadForm({ branches, compact = false }: { branches: Branch[]; co
           <h3 className="text-lg font-bold text-ink">Đặt lịch tư vấn miễn phí</h3>
           <p className="mt-1 text-[13px] text-ink/55">Điền 30 giây — Wonder gọi lại trong 15 phút.</p>
         </div>
-        <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">Miễn phí</span>
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Miễn phí
+        </span>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

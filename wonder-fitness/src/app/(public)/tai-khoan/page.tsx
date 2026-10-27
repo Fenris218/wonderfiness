@@ -12,17 +12,17 @@ import {
   QrCode,
   Receipt,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import { getSession } from "@/server/auth";
 import { listMyCheckins, listMyMemberships, listMyOrders } from "@/server/modules/order.service";
+import { needsRenewalNotice, processRenewalEmailForCustomer } from "@/server/modules/renewal.service";
 import { createQrToken, qrDataUrl } from "@/server/qr";
-import { formatDate, formatDateTime, formatVND } from "@/lib/format";
+import { daysLeft, formatDate, formatDateTime, formatVND } from "@/lib/format";
 import { ORDER_STATUS } from "@/lib/constants";
 import { MembershipCard } from "@/components/customer/membership-card";
+import { MembershipActions } from "@/components/customer/membership-actions";
+import { RenewalNotice } from "@/components/customer/renewal-notice";
 import { ButtonLink } from "@/components/ui/button";
-import { Badge, SectionTitle } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Tài khoản của tôi" };
 export const dynamic = "force-dynamic";
@@ -41,6 +41,31 @@ export default async function AccountPage() {
   const activeMembership = memberships.find((m) => m.status === "ACTIVE") ?? memberships[0] ?? null;
   const qr = activeMembership ? await qrDataUrl(createQrToken(activeMembership)) : null;
   const pendingOrders = orders.filter((o) => o.orderStatus === "PENDING");
+
+  // Banner gia hạn: chỉ thẻ đang hoạt động, còn 0–10 ngày và chưa bị đóng.
+  const renewalMembership =
+    memberships
+      .filter((m) => needsRenewalNotice(m))
+      .sort((a, b) => a.endDate.getTime() - b.endDate.getTime())[0] ?? null;
+
+  if (renewalMembership) {
+    try {
+      await processRenewalEmailForCustomer(session.customerId);
+    } catch (error) {
+      // Không chặn trang tài khoản nếu SMTP lỗi/chưa cấu hình.
+      console.error("[renewal] gửi email nhắc thất bại", error);
+    }
+  }
+
+  const renewalNotice = renewalMembership
+    ? {
+        membershipId: renewalMembership.membershipId,
+        memberCode: renewalMembership.memberCode,
+        packageName: renewalMembership.order.package.packageName,
+        endDate: renewalMembership.endDate.toISOString(),
+        daysLeft: Math.max(daysLeft(renewalMembership.endDate), 0),
+      }
+    : null;
 
   return (
     <section className="container-page py-10 sm:py-14">
@@ -94,6 +119,10 @@ export default async function AccountPage() {
             </div>
           )}
 
+          <div className="mt-5">
+            <RenewalNotice notice={renewalNotice} />
+          </div>
+
           {pendingOrders.length > 0 ? (
             <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5">
               <p className="flex items-center gap-2 text-sm font-semibold text-amber-800">
@@ -132,6 +161,8 @@ export default async function AccountPage() {
               <p className="mt-0.5 text-[11px] text-ink/40">thẻ đang dùng</p>
             </div>
           </div>
+
+          <MembershipActions />
         </div>
 
         <div className="space-y-5">

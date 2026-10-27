@@ -19,15 +19,6 @@ export async function getTrainers() {
   });
 }
 
-export async function getTrainerPriceRange() {
-  const range = await prisma.trainer.aggregate({
-    where: { isActive: true },
-    _min: { pricePerSession: true },
-    _max: { pricePerSession: true },
-  });
-  return { min: range._min.pricePerSession ?? 0, max: range._max.pricePerSession ?? 0 };
-}
-
 export async function getHomeStats() {
   const [branches, members, trainers, packages] = await Promise.all([
     prisma.branch.count(),

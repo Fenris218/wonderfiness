@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, Flame, Sparkles } from "lucide-react";
+import { Check, Flame } from "lucide-react";
 import { formatVND } from "@/lib/format";
 import { PACKAGE_TYPE_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -16,22 +16,12 @@ export type PackageCardData = {
   isPopular: boolean;
 };
 
-export type PriceRange = {
-  min: number;
-  max: number;
-  minPerSession: number;
-  maxPerSession: number;
-  sessions: number | null;
-};
-
 export function PriceCard({
   pkg,
   compact = false,
-  priceRange,
 }: {
   pkg: PackageCardData;
   compact?: boolean;
-  priceRange?: PriceRange;
 }) {
   const benefits = pkg.benefits.split("|").filter(Boolean);
   const totalMonths = pkg.durationMonths + pkg.bonusMonths;
@@ -44,44 +34,26 @@ export function PriceCard({
         pkg.isPopular ? "border-brand/40 shadow-[0_12px_40px_-16px_rgba(255,77,28,.45)]" : "border-line shadow-card"
       )}
     >
-      {pkg.isPopular ? (
-        <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-          <Flame className="h-3 w-3" /> Bán chạy nhất
-        </span>
-      ) : null}
-
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink/40">
           {PACKAGE_TYPE_LABELS[pkg.packageType] ?? pkg.packageType}
         </span>
-        {pkg.isPopular ? <Sparkles className="h-4 w-4 text-brand" /> : null}
+        {pkg.isPopular ? (
+          <span className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-brand">
+            <Flame className="h-3 w-3" /> Bán chạy nhất
+          </span>
+        ) : null}
       </div>
 
       <h3 className="mt-3 text-lg font-bold leading-snug text-ink">{pkg.packageName}</h3>
 
-      {priceRange ? (
-        <>
-          <div className="mt-4">
-            <span className="text-2xl font-extrabold tracking-tight text-ink">
-              {formatVND(priceRange.min)} – {formatVND(priceRange.max)}
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-ink/45">
-            {priceRange.sessions ? `${priceRange.sessions} buổi · ` : ""}
-            {formatVND(priceRange.minPerSession)}–{formatVND(priceRange.maxPerSession)}/buổi theo HLV
-          </p>
-        </>
-      ) : (
-        <>
-          <div className="mt-4 flex items-end gap-2">
-            <span className="text-3xl font-extrabold tracking-tight text-ink">{formatVND(pkg.price)}</span>
-          </div>
-          <p className="mt-1 text-xs text-ink/45">
-            ≈ {formatVND(perMonth)}/tháng · {totalMonths} tháng
-            {pkg.sessionCount ? ` · ${pkg.sessionCount} buổi` : ""}
-          </p>
-        </>
-      )}
+      <div className="mt-4 flex items-end gap-2">
+        <span className="text-3xl font-extrabold tracking-tight text-ink">{formatVND(pkg.price)}</span>
+      </div>
+      <p className="mt-1 text-xs text-ink/45">
+        ≈ {formatVND(perMonth)}/tháng · {totalMonths} tháng
+        {pkg.sessionCount ? ` · ${pkg.sessionCount} buổi` : ""}
+      </p>
 
       <ul className={cn("mt-5 grid gap-2.5", compact && "hidden sm:grid")}>
         {benefits.slice(0, 5).map((b) => (

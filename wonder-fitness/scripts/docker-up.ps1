@@ -49,8 +49,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "▸ Trên máy này:       http://localhost:3000"
-Write-Host "▸ Trên điện thoại:    http://${ip}:3000" -ForegroundColor Green
+Write-Host "▸ Trên máy này:       http://localhost:8080"
+Write-Host "▸ Trên điện thoại:    http://${ip}:8080" -ForegroundColor Green
 Write-Host "▸ HTTPS (quét QR):    https://${ip}:3443" -ForegroundColor Green
 Write-Host ""
 Write-Host "Lưu ý: dòng 'Network: http://172.x.x.x:3000' do Next.js in ra là IP nội bộ"

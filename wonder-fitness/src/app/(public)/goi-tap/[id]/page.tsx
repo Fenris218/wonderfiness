@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Check, Clock, QrCode, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Check, Clock, QrCode, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 import { prisma } from "@/server/db";
 import { getBranches, getTrainers } from "@/server/modules/catalog.service";
 import { getSession } from "@/server/auth";
 import { formatVND } from "@/lib/format";
 import { PACKAGE_TYPE_LABELS } from "@/lib/constants";
 import { PurchaseForm } from "@/components/catalog/purchase-form";
+import { BackLink } from "@/components/catalog/back-link";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
@@ -25,10 +26,10 @@ export default async function PackageDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ trainer?: string }>;
+  searchParams: Promise<{ trainer?: string; branch?: string }>;
 }) {
   const { id } = await params;
-  const { trainer: trainerParam } = await searchParams;
+  const { trainer: trainerParam, branch: branchParam } = await searchParams;
   const packageId = Number(id);
   if (!Number.isFinite(packageId)) notFound();
 
@@ -49,22 +50,47 @@ export default async function PackageDetailPage({
   const isPt = pkg.packageType === "PT";
   const ptMinPerSession = trainers.length > 0 ? Math.min(...trainers.map((t) => t.pricePerSession)) : 0;
   const ptMaxPerSession = trainers.length > 0 ? Math.max(...trainers.map((t) => t.pricePerSession)) : 0;
+
+  const parsedTrainerId = Number(trainerParam);
+  const initialTrainerId = Number.isFinite(parsedTrainerId) && parsedTrainerId > 0 ? parsedTrainerId : null;
+  // Chỉ nhận HLV đang hoạt động; nếu URL sai thì quay về luồng chọn HLV như cũ.
+  const selectedTrainer = initialTrainerId
+    ? trainers.find((t) => t.trainerId === initialTrainerId) ?? null
+    : null;
+
+  const parsedBranchId = Number(branchParam);
+  const initialBranchId =
+    Number.isFinite(parsedBranchId) && branches.some((b) => b.branchId === parsedBranchId)
+      ? parsedBranchId
+      : null;
+
+  // Giá hiển thị luôn lấy từ HLV đang chọn, không dùng giá mặc định của gói PT.
+  const trainerPrice = selectedTrainer?.pricePerSession ?? null;
+  const trainerTotal =
+    isPt && selectedTrainer && pkg.sessionCount ? selectedTrainer.pricePerSession * pkg.sessionCount : null;
+
   const ptRange =
-    isPt && pkg.sessionCount && ptMaxPerSession > 0
+    isPt && !selectedTrainer && pkg.sessionCount && ptMaxPerSession > 0
       ? {
           min: ptMinPerSession * pkg.sessionCount,
           max: ptMaxPerSession * pkg.sessionCount,
         }
       : null;
 
-  const parsedTrainerId = Number(trainerParam);
-  const initialTrainerId = Number.isFinite(parsedTrainerId) && parsedTrainerId > 0 ? parsedTrainerId : null;
+  // Quay lại đúng danh sách PT (kèm bộ lọc chi nhánh) thay vì danh sách gói Gym.
+  const backHref = isPt
+    ? `/goi-tap?type=PT${initialBranchId ? `&branch=${initialBranchId}` : ""}`
+    : "/goi-tap";
+  const nextPath = `/goi-tap/${pkg.packageId}${
+    selectedTrainer ? `?trainer=${selectedTrainer.trainerId}` : ""
+  }`;
 
   return (
     <section className="container-page py-10 sm:py-14">
-      <Link href="/goi-tap" className="inline-flex items-center gap-1.5 text-sm font-medium text-ink/50 hover:text-ink">
-        <ArrowLeft className="h-4 w-4" /> Tất cả gói tập
-      </Link>
+      <BackLink
+        href={backHref}
+        label={isPt ? "Danh sách gói PT & huấn luyện viên" : "Tất cả gói tập"}
+      />
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.15fr_1fr]">
         <div>
@@ -102,12 +128,18 @@ export default async function PackageDetailPage({
                 {isPt ? "Học phí / buổi" : "Quy ra tháng"}
               </p>
               <p className="mt-1 text-lg font-extrabold text-ink">
-                {isPt && ptMaxPerSession > 0
+                {isPt && trainerPrice !== null
+                  ? formatVND(trainerPrice)
+                  : isPt && ptMaxPerSession > 0
                   ? `${formatVND(ptMinPerSession)} – ${formatVND(ptMaxPerSession)}`
                   : formatVND(perMonth)}
               </p>
               <p className="text-[11px] text-ink/40">
-                {isPt ? "tuỳ huấn luyện viên" : "tiết kiệm hơn mua lẻ"}
+                {isPt
+                  ? trainerPrice !== null
+                    ? `HLV ${selectedTrainer?.fullName}`
+                    : "tuỳ huấn luyện viên"
+                  : "tiết kiệm hơn mua lẻ"}
               </p>
             </div>
             <div className="card p-4">
@@ -116,6 +148,56 @@ export default async function PackageDetailPage({
               <p className="text-[11px] text-ink/40">{pkg.sessionCount ? "buổi có HLV" : "không giới hạn"}</p>
             </div>
           </div>
+
+          {isPt && selectedTrainer ? (
+            <div className="card mt-5 p-5">
+              <div className="flex flex-wrap items-center gap-4">
+                {selectedTrainer.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={selectedTrainer.photoUrl}
+                    alt={selectedTrainer.fullName}
+                    className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-surface text-ink/50">
+                    <UserRound className="h-6 w-6" />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">
+                    <Sparkles className="h-3.5 w-3.5 text-brand" /> Huấn luyện viên đã chọn
+                  </p>
+                  <p className="mt-1 text-base font-bold text-ink">{selectedTrainer.fullName}</p>
+                  <p className="text-[12px] text-ink/50">
+                    {selectedTrainer.specialization} · {selectedTrainer.branch?.branchName ?? "Wonder Fitness"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-extrabold text-brand">{formatVND(selectedTrainer.pricePerSession)}</p>
+                  <p className="text-[11px] text-ink/45">/ buổi</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface px-4 py-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-ink/40">Tổng học phí</p>
+                  <p className="text-base font-extrabold text-ink">
+                    {trainerTotal !== null ? formatVND(trainerTotal) : "—"}
+                  </p>
+                </div>
+                <p className="text-[11.5px] text-ink/50">
+                  {pkg.sessionCount ?? 1} buổi × {formatVND(selectedTrainer.pricePerSession)}
+                </p>
+                <Link
+                  href={backHref}
+                  className="text-[12px] font-semibold text-brand underline-offset-2 hover:underline"
+                >
+                  Đổi huấn luyện viên
+                </Link>
+              </div>
+            </div>
+          ) : null}
 
           <div className="card mt-5 p-6">
             <h2 className="text-base font-bold text-ink">Quyền lợi bao gồm</h2>
@@ -131,16 +213,16 @@ export default async function PackageDetailPage({
             </ul>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[12px] font-medium text-ink/55">
             {[
               { icon: QrCode, text: "Thẻ QR điện tử dùng ngay" },
               { icon: Clock, text: "Mở cửa 05:30 – 21:30" },
               { icon: ShieldCheck, text: "Bảo lưu tối đa 30 ngày" },
             ].map((f) => (
-              <div key={f.text} className="flex items-center gap-2 rounded-xl border border-line bg-white px-3.5 py-3">
+              <span key={f.text} className="inline-flex items-center gap-1.5">
                 <f.icon className="h-4 w-4 shrink-0 text-brand" />
-                <span className="text-[12px] font-medium text-ink/65">{f.text}</span>
-              </div>
+                {f.text}
+              </span>
             ))}
           </div>
         </div>
@@ -159,9 +241,11 @@ export default async function PackageDetailPage({
               specialization: t.specialization,
               pricePerSession: t.pricePerSession,
             }))}
-            initialTrainerId={initialTrainerId}
+            initialTrainerId={selectedTrainer?.trainerId ?? null}
+            initialBranchId={isPt && !selectedTrainer ? initialBranchId : null}
+            ptListHref={backHref}
             isLoggedIn={isCustomer}
-            nextPath={`/goi-tap/${pkg.packageId}${initialTrainerId ? `?trainer=${initialTrainerId}` : ""}`}
+            nextPath={nextPath}
           />
           {ptRange ? (
             <div className="mt-3 rounded-xl bg-brand-soft/70 p-3.5 text-[12.5px] text-brand-dark ring-1 ring-brand/15">

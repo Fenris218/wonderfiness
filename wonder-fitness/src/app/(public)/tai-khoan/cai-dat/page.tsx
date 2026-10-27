@@ -53,7 +53,9 @@ export default async function AccountSettingsPage() {
             <p className="mt-1 text-sm font-semibold text-ink">{profile.fullName || "Hội viên Wonder"}</p>
             <p className="mt-0.5 text-[12.5px] text-ink/50">{profile.email ?? "Chưa liên kết email"}</p>
             <p className="mt-0.5 text-[12.5px] text-ink/50">{profile.phone ?? "Chưa có số điện thoại"}</p>
-            <span className="chip mt-3 bg-slate-100 text-slate-600 ring-slate-200">Hội viên</span>
+            <span className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink/40">
+              Hội viên
+            </span>
           </div>
 
           <div className="rounded-2xl bg-ink p-5 text-white">

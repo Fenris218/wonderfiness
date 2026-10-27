@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminRenewalsPage() {
   const session = await requireStaff("/admin/gia-han");
 
-  // Tự động gửi email nhắc cho thẻ còn <= 7 ngày (mỗi thẻ một lần).
+  // Tự động gửi email nhắc cho thẻ còn <= 10 ngày (mỗi thẻ một lần).
   const mailResult = await processDueRenewalEmails();
   const renewals = await listRenewals(session, 10);
 
@@ -44,7 +44,7 @@ export default async function AdminRenewalsPage() {
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand">Giữ chân hội viên</p>
         <h1 className="mt-1.5 text-2xl font-extrabold tracking-tight text-ink">Sắp hết hạn — nhắc gia hạn</h1>
         <p className="mt-1 max-w-2xl text-[13px] text-ink/50">
-          Hệ thống tự động gửi email nhắc khi thẻ còn 7 ngày. Sau khi email được gửi, nhân viên có thể bấm
+          Hệ thống tự động gửi email nhắc khi thẻ còn 10 ngày. Sau khi email được gửi, nhân viên có thể bấm
           <strong className="font-semibold text-ink"> Gọi điện</strong> để mở dialer với số thật của hội viên.
         </p>
       </div>

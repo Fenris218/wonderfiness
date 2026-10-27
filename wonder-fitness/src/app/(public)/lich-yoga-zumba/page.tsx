@@ -31,15 +31,18 @@ export default function YogaZumbaSchedulePage() {
             title="Lịch Yoga & Zumba"
             description="Lịch tập được cập nhật theo từng chi nhánh. Bấm vào ảnh để xem rõ hơn, hoặc gọi hotline nếu cần đổi buổi."
           />
-          <div className="mt-6 flex flex-wrap gap-2 text-[12px]">
-            <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">
-              <MapPin className="h-3 w-3" /> Áp dụng tại 5 chi nhánh
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-[12.5px] font-medium text-ink/60">
+            <span className="inline-flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-brand" /> Áp dụng tại 5 chi nhánh
             </span>
-            <span className="chip bg-white text-ink/60 ring-line">
-              <Clock3 className="h-3 w-3" /> 05:30 – 21:30 hằng ngày
+            <span className="inline-flex items-center gap-2">
+              <Clock3 className="h-4 w-4 text-brand" /> 05:30 – 21:30 hằng ngày
             </span>
-            <a href="tel:0902797443" className="chip bg-brand-soft text-brand-dark ring-brand/20">
-              <Phone className="h-3 w-3" /> Hotline 0902 797 443
+            <a
+              href="tel:0902797443"
+              className="inline-flex items-center gap-2 font-semibold text-brand transition hover:text-brand-dark hover:underline"
+            >
+              <Phone className="h-4 w-4" /> Hotline 0902 797 443
             </a>
           </div>
         </div>
@@ -58,7 +61,9 @@ export default function YogaZumbaSchedulePage() {
                   <p className="text-[12.5px] text-ink/45">{schedule.subtitle}</p>
                 </div>
               </div>
-              <span className="chip bg-surface text-ink/55 ring-line">Cập nhật hằng tuần</span>
+              <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-ink/45">
+                <CalendarDays className="h-3.5 w-3.5" /> Cập nhật hằng tuần
+              </span>
             </div>
             <div className="relative bg-surface/50">
               {/* eslint-disable-next-line @next/next/no-img-element */}

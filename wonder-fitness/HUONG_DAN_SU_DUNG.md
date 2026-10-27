@@ -9,18 +9,19 @@
 
 | Hạng mục | Giá trị |
 | --- | --- |
-| Website (local) | http://localhost:3000 |
-| Cổng nhân viên | http://localhost:3000/admin |
-| API base | http://localhost:3000/api/v1 |
+| Website (Docker) | http://localhost:8080 |
+| Website (dev) | http://localhost:3000 (`npm run dev`) |
+| Cổng nhân viên | http://localhost:8080/admin |
+| API base | http://localhost:8080/api/v1 |
 | Công nghệ | Next.js 15 (App Router), TypeScript, Tailwind CSS, Prisma, PostgreSQL 16 |
 | Dữ liệu | Demo seed sẵn: 5 chi nhánh, 6 gói tập, 8 HLV, 20 hội viên, 30 lead, 40 lượt check-in |
-| Thanh toán | Mô phỏng (mock VNPay / MoMo / VietQR) — không phát sinh giao dịch thật |
+| Thanh toán | Mô phỏng: chuyển khoản ngân hàng, ví điện tử, mã QR — không phát sinh giao dịch thật |
 
 ### Tài khoản demo (mật khẩu chung: `123456`)
 
 | Vai trò | Email | Dùng để xem |
 | --- | --- | --- |
-| Khách hàng | `` | Thẻ QR, đơn hàng, thanh toán |
+| Khách hàng | `khach@wonder.vn` | Thẻ QR, đơn hàng, thanh toán, gia hạn |
 | Nhân viên | `staff@wonder.vn` | Lead, check-in, gia hạn (chi nhánh Hòa Cường) |
 | Quản trị | `admin@wonder.vn` | Toàn bộ dashboard, báo cáo, danh mục |
 
@@ -32,9 +33,12 @@
 
 1. Mở **Gói tập** trên menu.
 2. Lọc theo nhu cầu: *Gym / PT 1-1*.
-3. Nhấn **Chọn gói này** để xem chi tiết: thời hạn, quyền lợi, quy ra giá/tháng.
-4. Tại trang chi tiết, chọn **chi nhánh**, **HLV** (nếu là gói PT) và **hình thức thanh toán**.
+3. **Gói Gym:** nhấn **Chọn gói này** để xem chi tiết: thời hạn, quyền lợi, quy ra giá/tháng.
+4. **PT 1-1:** chuyển tab *PT 1-1*, lọc theo chi nhánh nếu cần, bấm vào HLV để xem hồ sơ và học phí/buổi riêng. Nhấn **Chọn HLV này** để sang trang chi tiết gói PT đã gắn HLV.
+5. Tại trang chi tiết: gói Gym chọn **chi nhánh** + hình thức thanh toán; gói PT đã chọn HLV thì hệ thống khoá HLV/chi nhánh và chỉ hiển thị số buổi, học phí, tổng tiền.
 
+> Học phí PT lấy theo `Trainer.pricePerSession` của từng HLV (quản trị sửa ở menu **Huấn luyện viên**), dùng thống nhất ở danh sách HLV, trang chi tiết và đơn thanh toán.
+>
 > Gói nổi bật được gắn nhãn *Bán chạy nhất*. Giá đã bao gồm tủ đồ, nước uống và lớp nhóm — không phí ẩn.
 >
 > **Lịch Yoga/Zumba:** mở tab **Lịch Yoga/Zumba** trên menu để xem lịch lớp (ảnh `yoga.jpg`, `zumba.jpg`). Yoga/Zumba không còn nằm trong bảng giá.
@@ -68,9 +72,10 @@
 ### 1.5 Mua gói và thanh toán
 
 1. Chọn gói → nhấn **Tạo đơn hàng** (nếu chưa đăng nhập, hệ thống yêu cầu đăng nhập rồi quay lại).
-2. Trang thanh toán hiển thị mã đơn, gói, chi nhánh, tổng tiền.
-3. Chọn cổng mô phỏng: **VNPay / MoMo / VietQR** → **Thanh toán**.
-4. Sau ~1 giây, hệ thống tạo **thẻ hội viên QR** và chuyển sang trang *Thanh toán thành công*.
+2. Trang thanh toán hiển thị mã đơn, gói, chi nhánh, HLV (nếu là PT) và tổng tiền.
+3. Chọn phương thức mô phỏng: **Chuyển khoản ngân hàng / Ví điện tử / Mã QR**. Mỗi phương thức hiển thị thông tin ngân hàng, số tiền, nội dung chuyển khoản và mã QR minh hoạ.
+4. Bấm **Tôi đã chuyển khoản / Xác nhận thanh toán / Tôi đã quét mã** → hệ thống tạo **thẻ hội viên QR** và chuyển sang trang *Thanh toán thành công*.
+5. Các trạng thái mô phỏng: **Chờ thanh toán → Đang xử lý → Thành công / Thất bại / Đã huỷ / Hết hiệu lực** (phiên 15 phút). Nút *Mô phỏng giao dịch thất bại* để thử luồng lỗi; *Huỷ giao dịch* để huỷ đơn đang chờ.
 
 **Kết quả:** thẻ QR hiển thị mã hội viên (VD `WF-HV-0021`), hạn dùng, số buổi PT còn lại; có nút **Tải thẻ QR về máy**.
 
@@ -84,8 +89,11 @@
 
 ### 1.7 Gia hạn
 
-- Thẻ còn **≤ 10 ngày** sẽ xuất hiện trong danh sách nhắc gia hạn của nhân viên.
-- Bạn có thể chủ động mua gói mới bất kỳ lúc nào tại **Gói tập** — thẻ mới được cộng dồn theo ngày bắt đầu dự kiến.
+- Thẻ còn **≤ 10 ngày** sẽ hiện banner **Gói tập sắp hết hạn** ngay trên trang **Tài khoản của tôi**, kèm ngày hết hạn và số ngày còn lại.
+- Bấm **Gia hạn**: hệ thống cộng đúng số tháng của gói vào phần thời gian còn lại (không ghi đè), hiển thị **Đã gia hạn thành công** và cập nhật hạn mới. Bấm nhiều lần không bị cộng trùng.
+- Bấm **Hủy** chỉ đóng banner nhắc — **không huỷ gói** và không đổi thời hạn thẻ.
+- Ngoài ra bạn vẫn có thể mua gói mới bất kỳ lúc nào tại **Gói tập**.
+- Nếu đã liên kết email, hệ thống gửi email nhắc trước khi hết hạn (trong cửa sổ 7–10 ngày, mỗi thẻ một lần).
 
 ---
 
@@ -149,9 +157,10 @@
 ### 2.4 Nhắc gia hạn
 
 1. Menu **Gia hạn** — danh sách thẻ còn ≤ 10 ngày.
-2. Hệ thống tự gửi email nhắc (một lần/thẻ) tới email đã xác thực OTP.
+2. Khi mở trang Tổng quan/Gia hạn, hệ thống tự gửi email nhắc (một lần/thẻ) tới email đã xác thực OTP.
 3. Sau khi email được gửi, nút **Gọi điện** mở dialer với số thật của hội viên. Mỗi thẻ chỉ gọi nhắc **một lần**:
    bấm xong nút chuyển ngay thành **Đã liên hệ** (server cũng chặn cuộc gọi thứ hai).
+4. Hội viên cũng có thể tự gia hạn bằng banner trên trang tài khoản — thời hạn được cộng dồn và chống bấm lặp ở phía server.
 
 ### 2.5 Báo cáo & dashboard
 
@@ -241,30 +250,30 @@ docker compose logs -f web     # xem quá trình migrate + seed
 - `db`: PostgreSQL 16, volume `wonder_pgdata`, healthcheck `pg_isready`.
 - `web`: Next.js production, tự động `prisma db push` và seed **chỉ khi DB trống**.
 - `https`: nginx reverse proxy + chứng chỉ tự ký, phục vụ HTTPS cho LAN.
-- Truy cập http://localhost:3000. Dừng: `docker compose down`. Xoá sạch dữ liệu: `docker compose down -v`.
+- Truy cập http://localhost:8080. Dừng: `docker compose down`. Xoá sạch dữ liệu: `docker compose down -v`.
 
 **Cổng đang dùng**
 
 | Service | Port |
 | --- | --- |
-| web | 3000 |
+| web | 8080 |
 | https | 3443 |
 | db | 5432 |
 
-Đổi cổng web: sửa `ports: "8080:3000"` trong `docker-compose.yml`.
+Đổi cổng web: sửa `ports: "8080:3000"` trong `docker-compose.yml` (và cập nhật `NEXT_PUBLIC_APP_URL` tương ứng).
 
 ### 3.3.1 Quét QR bằng camera điện thoại cần HTTPS
 
 Trình duyệt chỉ cho phép mở camera (`getUserMedia`) trong **secure context** — `https://` hoặc
-`localhost`. Vì vậy mở `http://<IP-Wi-Fi>:3000` trên điện thoại thì nút **Quét QR** sẽ báo cần HTTPS,
+`localhost`. Vì vậy mở `http://<IP-Wi-Fi>:8080` trên điện thoại thì nút **Quét QR** sẽ báo cần HTTPS,
 chỉ còn cách **Chụp ảnh QR** (dùng app camera gốc của máy).
 
 Cách chạy đúng:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/docker-up.ps1
-# → http://localhost:3000
-# → http://<IP-Wi-Fi>:3000
+# → http://localhost:8080
+# → http://<IP-Wi-Fi>:8080
 # → https://<IP-Wi-Fi>:3443   ← mở địa chỉ này trên điện thoại để quét QR
 ```
 
@@ -284,10 +293,13 @@ powershell -ExecutionPolicy Bypass -File scripts/docker-up.ps1
 | --- | --- | --- |
 | `DATABASE_URL` | ✅ | Chuỗi kết nối PostgreSQL |
 | `AUTH_SECRET` | ✅ (prod) | Khoá ký JWT, ≥ 32 ký tự |
-| `NEXT_PUBLIC_APP_URL` | — | URL công khai dùng trong email/nhắc gia hạn. Cookie session tự bật cờ `Secure` khi request đi qua HTTPS (proxy cổng 3443), nên đặt `https://<IP-Wi-Fi>:3443` vẫn đăng nhập được bằng `http://localhost:3000`. |
+| `NEXT_PUBLIC_APP_URL` | — | URL công khai dùng trong email/nhắc gia hạn. Cookie session tự bật cờ `Secure` khi request đi qua HTTPS (proxy cổng 3443), nên đặt `https://<IP-Wi-Fi>:3443` vẫn đăng nhập được bằng `http://localhost:8080` (Docker) hoặc `http://localhost:3000` (dev). |
 | `LAN_IP` | — | IP Wi-Fi/Ethernet của máy chạy Docker. `scripts/docker-up.ps1` tự dò và truyền vào; proxy HTTPS dùng IP này để cấp chứng chỉ tự ký đúng tên miền. |
 | `SEED_DB` | — | `true` để tự seed khi DB trống (mặc định trong compose) |
 | `DEMO_MODE` | — | Cờ đánh dấu môi trường demo |
+| `SMTP_HOST` / `SMTP_PORT` | — | Máy chủ SMTP gửi OTP và email nhắc gia hạn (mặc định `smtp.gmail.com:465`). |
+| `SMTP_USER` / `SMTP_PASS` | — | Tài khoản Gmail + App Password 16 ký tự. Không commit giá trị thật; chỉ điền trong `.env` (đã gitignore). |
+| `MAIL_FROM` | — | Tên/địa chỉ hiển thị ở người gửi, ví dụ `Wonder Fitness <ban@gmail.com>`. |
 
 ### 3.5 Cấu trúc thư mục
 
@@ -349,6 +361,9 @@ wonder-fitness/
 | POST | `/api/v1/payments/mock/confirm` | owner/staff | Xác nhận thanh toán + tạo thẻ |
 | GET | `/api/v1/memberships/me` | customer | Thẻ của tôi |
 | GET | `/api/v1/memberships/[id]/qr` | owner/staff | Token + ảnh QR |
+| POST | `/api/v1/memberships/[id]/renew` | owner | Tự gia hạn thẻ (cộng dồn thời hạn) |
+| POST | `/api/v1/memberships/[id]/dismiss-renewal` | owner | Đóng banner nhắc gia hạn (không huỷ gói) |
+| POST | `/api/v1/orders/[code]/cancel` | owner | Huỷ đơn đang chờ thanh toán |
 | GET | `/api/v1/admin/leads` | staff/admin | Danh sách lead |
 | GET | `/api/v1/admin/leads/[id]` | staff/admin | Chi tiết + nhật ký |
 | POST | `/api/v1/admin/leads/[id]/claim` | staff | Nhận lead (khoá) |
@@ -394,10 +409,10 @@ npm run db:reset     # reset + seed
 | Docker build lỗi `package-lock.json` | Chạy `npm install` ở host để sinh lockfile trước khi build. |
 | Seed chạy lại mất dữ liệu | `SEED_DB=true` chỉ seed khi DB trống; muốn seed lại thủ công: `docker compose exec web npx tsx prisma/seed.ts`. |
 | Không nhận được lead | Lead đã bị nhân viên khác khoá, hoặc khác chi nhánh. Admin có thể **Trả về**. |
-| Không nhận được email OTP | Kiểm tra `SMTP_USER`/`SMTP_PASS` (Gmail App Password 16 ký tự) trong `.env` hoặc `docker-compose.yml`; xem mục Spam; bảo đảm tài khoản đã liên kết email. |
+| Không nhận được email OTP | Kiểm tra `SMTP_USER`/`SMTP_PASS` (Gmail App Password 16 ký tự) trong `.env`; xem mục Spam; bảo đảm tài khoản đã liên kết email. |
 | Gmail báo `Invalid login` | App Password bị thu hồi hoặc 2FA chưa bật. Tạo App Password mới tại myaccount.google.com/apppasswords. |
-| Next.js in `Network: http://172.x.x.x:3000` | Đó là IP **nội bộ container**, không phải IP Wi-Fi. Chạy `npm run docker:up` (hoặc `scripts/docker-up.ps1`) để tự dò IPv4 Wi-Fi và in đúng địa chỉ `http://<IP-Wi-Fi>:3000`. |
-| Điện thoại không mở được `http://<IP>:3000` | Điện thoại và máy tính phải cùng Wi-Fi; kiểm tra Windows Firewall cho Docker Desktop; dùng `npm run docker:up` để lấy đúng IP. |
+| Next.js in `Network: http://172.x.x.x:3000` | Đó là IP **nội bộ container**, không phải IP Wi-Fi. Chạy `npm run docker:up` (hoặc `scripts/docker-up.ps1`) để tự dò IPv4 Wi-Fi và in đúng địa chỉ `http://<IP-Wi-Fi>:8080`. |
+| Điện thoại không mở được `http://<IP>:8080` | Điện thoại và máy tính phải cùng Wi-Fi; kiểm tra Windows Firewall cho Docker Desktop; dùng `npm run docker:up` để lấy đúng IP. |
 | Camera QR không mở, báo “cần HTTPS” | Mở `https://<IP-Wi-Fi>:3443` thay vì HTTP. Nếu vẫn lỗi, kiểm tra container `wonder-https` đang chạy: `docker compose ps` và `docker compose logs https`. |
 | Trình duyệt cảnh báo “Không phải kết nối riêng tư” | Bình thường với chứng chỉ tự ký: **Nâng cao → Tiếp tục truy cập**. Sau khi đổi Wi-Fi, chạy lại `npm run docker:up` để cấp lại chứng chỉ đúng IP mới. |
 | Đã đổi Wi-Fi nhưng HTTPS vẫn báo sai tên miền | Chứng chỉ cũ còn trong volume: `docker compose restart https` (script tự phát hiện IP mới) hoặc `docker volume rm wonder-fitness_wonder_certs` rồi `docker compose up -d https`. |
@@ -407,7 +422,9 @@ npm run db:reset     # reset + seed
 
 **Đã hoàn thiện (6 FR):** xem bảng giá/gói, gửi lead + chống trùng, quản lý & khoá lead + nhật ký, đăng ký/thanh toán mock + sinh thẻ QR, check-in QR + kiểm tra hạn/buổi PT, dashboard & báo cáo.
 
-**Chỉ UI / một phần (3 FR):** quản lý danh mục (chỉ đọc), thông báo (chỉ ghi log, không gửi thật), phân quyền chi tiết (3 role cố định).
+**Bổ sung theo yêu cầu chỉnh sửa:** thanh toán mô phỏng 3 phương thức + trạng thái đầy đủ; học phí PT theo từng HLV; luồng chọn HLV → chi tiết → thanh toán và quay lại giữ bộ lọc/scroll; bản đồ Google Maps embed theo chi nhánh; banner tự gia hạn + email nhắc 7–10 ngày; card bảo lưu/chuyển nhượng (UI minh hoạ); chuẩn hoá nhãn thông tin tĩnh.
+
+**Chỉ UI / một phần (3 FR):** quản lý danh mục (chỉ đọc), bảo lưu/chuyển nhượng thẻ (chỉ giao diện), phân quyền chi tiết (3 role cố định).
 
 **Roadmap (3 FR):** tích hợp cổng thanh toán thật (VNPay/MoMo), OTP SMS, app mobile/check-in offline, xuất Excel/PDF, audit log.
 

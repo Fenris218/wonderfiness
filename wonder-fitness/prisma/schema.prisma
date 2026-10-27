@@ -226,6 +226,10 @@ model Membership {
   status          String           @default("ACTIVE") // ACTIVE | EXPIRED | FROZEN
   reminderEmailSentAt DateTime?    @db.Timestamptz(3)
   lastReminderCallAt  DateTime?    @db.Timestamptz(3)
+  // Hội viên tự đóng thông báo gia hạn trên trang tài khoản (không huỷ gói).
+  renewalNoticeDismissedAt DateTime? @db.Timestamptz(3)
+  // Mốc chống gia hạn lặp khi hội viên bấm nút nhiều lần.
+  lastRenewedAt   DateTime?        @db.Timestamptz(3)
   createdAt       DateTime         @default(now()) @db.Timestamptz(3)
   checkIns        CheckIn[]
   contacts        ContactLog[]

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ShoppingBag } from "lucide-react";
+import { CalendarCheck2, Loader2, MapPin, ShoppingBag, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatVND } from "@/lib/format";
 
@@ -23,6 +24,8 @@ export function PurchaseForm({
   branches,
   trainers,
   initialTrainerId = null,
+  initialBranchId = null,
+  ptListHref = "/goi-tap?type=PT",
   isLoggedIn,
   nextPath,
 }: {
@@ -33,20 +36,27 @@ export function PurchaseForm({
   branches: Branch[];
   trainers: Trainer[];
   initialTrainerId?: number | null;
+  initialBranchId?: number | null;
+  ptListHref?: string;
   isLoggedIn: boolean;
   nextPath: string;
 }) {
   const router = useRouter();
   const initialTrainer = trainers.find((t) => t.trainerId === initialTrainerId) ?? null;
-  const [branchId, setBranchId] = useState(initialTrainer?.branchId ?? branches[0]?.branchId ?? 0);
+  const [branchId, setBranchId] = useState(
+    initialTrainer?.branchId ?? initialBranchId ?? branches[0]?.branchId ?? 0
+  );
   const [trainerId, setTrainerId] = useState<number | null>(initialTrainer?.trainerId ?? null);
   const [paymentOption, setPaymentOption] = useState<"ONLINE" | "AT_COUNTER">("ONLINE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isPt = packageType === "PT";
+  // Đã chọn HLV từ danh sách PT → khoá lựa chọn, không bắt chọn lại.
+  const lockedTrainer = isPt ? initialTrainer : null;
   const branchTrainers = trainers.filter((t) => t.branchId === branchId);
-  const selectedTrainer = branchTrainers.find((t) => t.trainerId === trainerId) ?? null;
+  const selectedTrainer = lockedTrainer ?? branchTrainers.find((t) => t.trainerId === trainerId) ?? null;
+  const selectedBranch = branches.find((b) => b.branchId === (selectedTrainer?.branchId ?? branchId)) ?? null;
   const sessions = sessionCount ?? 1;
   const total = isPt ? (selectedTrainer ? selectedTrainer.pricePerSession * sessions : 0) : price;
 
@@ -73,7 +83,12 @@ export function PurchaseForm({
       const res = await fetch("/api/v1/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageId, branchId, trainerId: isPt ? trainerId : null, paymentOption }),
+        body: JSON.stringify({
+          packageId,
+          branchId: selectedTrainer?.branchId ?? branchId,
+          trainerId: isPt ? selectedTrainer?.trainerId ?? null : null,
+          paymentOption,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -92,18 +107,50 @@ export function PurchaseForm({
 
   return (
     <form onSubmit={submit} className="card space-y-5 p-6">
-      <div>
-        <p className="label">Chi nhánh tập luyện</p>
-        <select className="input" value={branchId} onChange={(e) => changeBranch(Number(e.target.value))}>
-          {branches.map((b) => (
-            <option key={b.branchId} value={b.branchId}>
-              {b.branchName} — {b.address}
-            </option>
-          ))}
-        </select>
-      </div>
+      {lockedTrainer ? (
+        <div className="rounded-xl border border-line bg-surface/60 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">
+                <UserRound className="h-3.5 w-3.5 text-brand" /> Huấn luyện viên
+              </p>
+              <p className="mt-1 text-sm font-bold text-ink">{lockedTrainer.fullName}</p>
+              <p className="text-[11.5px] text-ink/50">{lockedTrainer.specialization}</p>
+            </div>
+            <Link
+              href={ptListHref}
+              className="shrink-0 text-[12px] font-semibold text-brand underline-offset-2 hover:underline"
+            >
+              Đổi HLV
+            </Link>
+          </div>
 
-      {isPt ? (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-ink/55">
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-ink/35" />
+              {selectedBranch?.branchName ?? "Wonder Fitness"}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarCheck2 className="h-3.5 w-3.5 text-ink/35" />
+              {sessions} buổi
+            </span>
+            <span className="font-semibold text-ink/70">{formatVND(lockedTrainer.pricePerSession)}/buổi</span>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="label">Chi nhánh tập luyện</p>
+          <select className="input" value={branchId} onChange={(e) => changeBranch(Number(e.target.value))}>
+            {branches.map((b) => (
+              <option key={b.branchId} value={b.branchId}>
+                {b.branchName} — {b.address}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {isPt && !lockedTrainer ? (
         <div>
           <p className="label">Chọn huấn luyện viên (bắt buộc)</p>
           <select
@@ -131,14 +178,15 @@ export function PurchaseForm({
         <p className="label">Hình thức thanh toán</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {[
-            { id: "ONLINE" as const, title: "Thanh toán online", desc: "Mock VNPay / MoMo / VietQR" },
+            { id: "ONLINE" as const, title: "Thanh toán online", desc: "Chuyển khoản, ví điện tử hoặc QR" },
             { id: "AT_COUNTER" as const, title: "Tại quầy", desc: "Giữ đơn 48h, thanh toán sau" },
           ].map((opt) => (
             <button
               type="button"
               key={opt.id}
               onClick={() => setPaymentOption(opt.id)}
-              className={`rounded-xl border p-3.5 text-left transition ${
+              aria-pressed={paymentOption === opt.id}
+              className={`rounded-xl border p-3.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/15 ${
                 paymentOption === opt.id
                   ? "border-brand bg-brand-soft ring-2 ring-brand/15"
                   : "border-line bg-white hover:border-ink/20"
@@ -167,7 +215,7 @@ export function PurchaseForm({
           <Button
             type="submit"
             size="lg"
-            disabled={loading || !branchId || (isPt && !selectedTrainer)}
+            disabled={loading || (!lockedTrainer && !branchId) || (isPt && !selectedTrainer)}
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
             {isLoggedIn ? "Tạo đơn hàng" : "Đăng nhập để mua"}

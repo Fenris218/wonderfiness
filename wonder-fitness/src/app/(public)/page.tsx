@@ -206,10 +206,10 @@ export default async function HomePage() {
           </ButtonLink>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {PROGRAMS.map((p) => (
-            <div key={p.title} className="card card-hover group p-6">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-ink text-white transition group-hover:bg-brand">
+            <div key={p.title} className="group">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-soft text-brand transition group-hover:bg-brand group-hover:text-white">
                 <p.icon className="h-6 w-6" />
               </span>
               <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand">{p.tag}</p>
@@ -280,7 +280,7 @@ export default async function HomePage() {
               {WHY.map((w) => (
                 <div key={w.title} className="flex gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
-                    <w.icon className="h-4.5 w-4.5" />
+                    <w.icon className="h-4 w-4" />
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-ink">{w.title}</p>
@@ -323,10 +323,10 @@ export default async function HomePage() {
               title="5 phòng tập khắp Đà Nẵng"
               description="Dùng thẻ hội viên ở bất kỳ chi nhánh nào trong hệ thống Wonder. Chọn nơi gần bạn nhất."
             />
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
               {branches.map((b) => (
-                <span key={b.branchId} className="chip bg-white text-ink/60 ring-line">
-                  <MapPin className="h-3 w-3 text-brand" />
+                <span key={b.branchId} className="inline-flex items-center gap-2 text-[13px] font-medium text-ink/60">
+                  <MapPin className="h-4 w-4 text-brand" />
                   {b.branchName.replace("Wonder ", "")}
                 </span>
               ))}
@@ -390,7 +390,7 @@ export default async function HomePage() {
                 Để lại số điện thoại — Wonder gọi bạn trong 15 phút.
               </h2>
               <p className="mt-3 max-w-lg text-sm text-white/80">
-                Tư vấn gói tập phù hợp mục tiêu, đo InBody miễn phí và tham quan phòng tập gần nhất.
+                Tư vấn gói tập phù hợp mục tiêu, đo InBody miễn phí và trải nghiệm phòng tập gần nhất.
               </p>
             </div>
             <ButtonLink href="/tu-van" size="lg" variant="dark" className="shrink-0">

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getBranches } from "@/server/modules/catalog.service";
-import { BranchCard } from "@/components/catalog/branch-card";
+import { BranchExplorer } from "@/components/catalog/branch-explorer";
 import { SectionTitle } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Car, Clock, Dumbbell, ShowerHead, Wifi } from "lucide-react";
@@ -32,10 +32,10 @@ export default async function BranchesPage() {
             title="Tập ở đâu cũng là Wonder"
             description="Một thẻ hội viên — dùng được ở cả 5 chi nhánh. Chọn nơi thuận đường nhất với bạn."
           />
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
             {AMENITIES.map((a) => (
-              <span key={a.label} className="chip bg-surface text-ink/60 ring-line">
-                <a.icon className="h-3.5 w-3.5 text-brand" />
+              <span key={a.label} className="inline-flex items-center gap-2 text-[13px] font-medium text-ink/60">
+                <a.icon className="h-4 w-4 text-brand" />
                 {a.label}
               </span>
             ))}
@@ -44,17 +44,13 @@ export default async function BranchesPage() {
       </section>
 
       <section className="container-page py-10 sm:py-14">
-        <div className="grid gap-4 md:grid-cols-2">
-          {branches.map((b, i) => (
-            <BranchCard key={b.branchId} branch={b} index={i} />
-          ))}
-        </div>
+        <BranchExplorer branches={branches} />
       </section>
 
-      <section className="container-page pb-8">
+      <section className="container-page pb-10 sm:pb-14">
         <div className="card overflow-hidden">
           <div className="grid lg:grid-cols-[1fr_1.2fr]">
-            <div className="p-8">
+            <div className="p-6 sm:p-8">
               <h3 className="text-xl font-bold text-ink">Chi nhánh Hòa Cường — trụ sở chính</h3>
               <p className="mt-2 text-sm leading-relaxed text-ink/55">
                 112 Nguyễn Hữu Thọ, Hải Châu. Diện tích 1.200m², 3 tầng: tầng 1 cardio &amp; lễ tân, tầng 2 khu tạ,
@@ -66,7 +62,7 @@ export default async function BranchesPage() {
                 <p>· Khu vực tập nữ riêng biệt</p>
               </div>
               <ButtonLink href="/tu-van" size="md" className="mt-6">
-                Đặt lịch tham quan
+                Đặt lịch trải nghiệm
               </ButtonLink>
             </div>
             <div className="min-h-[280px] bg-ink">

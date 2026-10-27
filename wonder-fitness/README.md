@@ -12,7 +12,7 @@ Website demo cho chuỗi 5 phòng gym tại Đà Nẵng, xây dựng từ báo c
 ```bash
 npm run docker:up
 # tương đương: powershell -ExecutionPolicy Bypass -File scripts/docker-up.ps1
-# → http://localhost:3000 và in kèm http://<IP-Wi-Fi>:3000 để mở trên điện thoại
+# → http://localhost:8080 và in kèm http://<IP-Wi-Fi>:8080 để mở trên điện thoại
 docker compose logs -f web
 ```
 
@@ -26,14 +26,14 @@ Container web tự đồng bộ schema (`prisma db push`) và seed dữ liệu d
 ### HTTPS cho LAN (quét QR bằng camera điện thoại)
 
 Trình duyệt chỉ cho phép `getUserMedia` (mở camera) trong **secure context** — tức `https://`
-hoặc `localhost`. Mở `http://<IP-Wi-Fi>:3000` trên điện thoại thì nút **Quét QR** sẽ bị chặn.
+hoặc `localhost`. Mở `http://<IP-Wi-Fi>:8080` trên điện thoại thì nút **Quét QR** sẽ bị chặn.
 
 Repo có sẵn service `https` (nginx + chứng chỉ tự ký) trong `docker-compose.yml`:
 
 ```bash
 npm run docker:up
 # → https://<IP-Wi-Fi>:3443   (dùng cho camera quét QR)
-# → http://<IP-Wi-Fi>:3000    (dùng bình thường, không cần camera)
+# → http://<IP-Wi-Fi>:8080    (dùng bình thường, không cần camera)
 ```
 
 - Chứng chỉ tự ký nên lần đầu trình duyệt cảnh báo: bấm **Nâng cao → Tiếp tục truy cập**
@@ -42,7 +42,7 @@ npm run docker:up
   thì chạy lại `npm run docker:up` (hoặc `docker compose restart https`) để cấp lại.
 - Muốn email/nhắc gia hạn chứa link HTTPS: đặt `NEXT_PUBLIC_APP_URL="https://<IP-Wi-Fi>:3443"`
   trong `docker-compose.yml`. Cookie session chỉ bật `Secure` khi request thật sự đi qua HTTPS,
-  nên vẫn đăng nhập được bằng `http://localhost:3000`.
+  nên vẫn đăng nhập được bằng `http://localhost:8080`.
 
 
 ## Chạy local
@@ -81,12 +81,12 @@ MAIL_FROM="Wonder Fitness <wonderfitnessgymcenter@gmail.com>"
 
 ## Tính năng chính
 
-- **Khách:** xem bảng giá, chi tiết gói, HLV, chi nhánh, gửi form tư vấn, đăng ký/đăng nhập.
+- **Khách:** xem bảng giá, chi tiết gói, HLV PT theo từng chi nhánh (học phí riêng mỗi HLV), chi nhánh + bản đồ Google Maps, gửi form tư vấn, đăng ký/đăng nhập.
 - **Lịch lớp nhóm:** tab **Lịch Yoga/Zumba** hiển thị lịch lớp qua ảnh `yoga.jpg` / `zumba.jpg`.
 - **Trợ lý ảo:** chatbot **Hỏi Wonder** trả lời theo kịch bản về giá, lịch, chi nhánh, HLV, hotline.
-- **Tài khoản:** cập nhật thông tin cá nhân, đổi mật khẩu, liên kết Gmail/email thật bằng OTP, quên mật khẩu qua email.
-- **Mua gói:** tạo đơn → thanh toán mô phỏng (VNPay/MoMo/VietQR) → sinh thẻ hội viên QR.
-- **Nhân viên:** quản lý lead có khoá chống tranh, nhật ký liên hệ, check-in QR, nhắc gia hạn.
+- **Tài khoản:** cập nhật thông tin cá nhân, đổi mật khẩu, liên kết Gmail/email thật bằng OTP, quên mật khẩu qua email, banner nhắc gia hạn + tự gia hạn, card bảo lưu/chuyển nhượng (UI minh hoạ).
+- **Mua gói:** tạo đơn → thanh toán mô phỏng (chuyển khoản / ví điện tử / QR, có trạng thái chờ – thành công – thất bại – huỷ) → sinh thẻ hội viên QR.
+- **Nhân viên:** quản lý lead có khoá chống tranh, nhật ký liên hệ, check-in QR, nhắc gia hạn qua Gmail + gọi điện.
 - **Quản trị:** dashboard KPI, biểu đồ doanh thu/phễu/cơ cấu gói, báo cáo theo chi nhánh.
 
 ## Cấu trúc

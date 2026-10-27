@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Đặt lịch tư vấn miễn phí",
-  description: "Để lại số điện thoại, Wonder Fitness gọi tư vấn trong 15 phút. Đo InBody và tham quan phòng tập miễn phí.",
+  description: "Để lại số điện thoại, Wonder Fitness gọi tư vấn trong 15 phút. Đo InBody và trải nghiệm phòng tập miễn phí.",
 };
 
 const PROMISES = [

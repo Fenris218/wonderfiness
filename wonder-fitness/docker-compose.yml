@@ -32,17 +32,17 @@ services:
     environment:
       DATABASE_URL: "postgresql://wonder:wonder_secret@db:5432/wonder_fitness?schema=public"
       AUTH_SECRET: "wonder-fitness-demo-secret-change-me-32chars"
-      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NEXT_PUBLIC_APP_URL: "http://localhost:8080"
       SEED_DB: "true"
       TZ: Asia/Ho_Chi_Minh
-      SMTP_HOST: "smtp.gmail.com"
-      SMTP_PORT: "465"
-      SMTP_USER: "wonderfitnessgymcenter@gmail.com"
-      SMTP_PASS: "hikjtzcizucmqkmd"
-      MAIL_FROM: "Wonder Fitness <wonderfitnessgymcenter@gmail.com>"
+      SMTP_HOST: "${SMTP_HOST:-smtp.gmail.com}"
+      SMTP_PORT: "${SMTP_PORT:-465}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      MAIL_FROM: "${MAIL_FROM:-Wonder Fitness <noreply@wonder.vn>}"
       LAN_IP: "${LAN_IP:-}"
     ports:
-      - "3000:3000"
+      - "8080:3000"
 
   # HTTPS tự ký cho LAN — cần thiết để trình duyệt điện thoại cho phép mở
   # camera quét QR (getUserMedia chỉ chạy trong secure context).

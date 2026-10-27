@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getBranches, getPackages, getTrainers } from "@/server/modules/catalog.service";
 import { PackageGrid } from "@/components/catalog/package-grid";
 import { SectionTitle } from "@/components/ui/badge";
-import { BadgeCheck, CreditCard, QrCode, RefreshCw } from "lucide-react";
+import { BadgeCheck, CreditCard, MapPin, QrCode, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 const NOTES = [
-  { icon: CreditCard, title: "Thanh toán linh hoạt", desc: "Online (mock VNPay/MoMo/VietQR) hoặc tại quầy." },
+  { icon: CreditCard, title: "Thanh toán linh hoạt", desc: "Chuyển khoản, ví điện tử, mã QR hoặc thanh toán tại quầy." },
   { icon: QrCode, title: "Thẻ QR tức thì", desc: "Thẻ hội viên điện tử dùng được ở cả 5 chi nhánh." },
   { icon: RefreshCw, title: "Gia hạn dễ dàng", desc: "Nhắc trước 10 ngày, gia hạn online không cần đến quầy." },
   { icon: BadgeCheck, title: "Không phí ẩn", desc: "Giá đã gồm tủ đồ, nước uống và lớp group X." },
@@ -21,9 +21,9 @@ const NOTES = [
 export default async function PackagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; branch?: string }>;
 }) {
-  const { type } = await searchParams;
+  const { type, branch } = await searchParams;
   const [allPackages, branches, trainers] = await Promise.all([getPackages(), getBranches(), getTrainers()]);
 
   // Yoga/Zumba chuyển sang tab "Lịch Yoga/Zumba" — bảng giá chỉ còn gói Gym.
@@ -34,6 +34,12 @@ export default async function PackagesPage({
   const requested = (type ?? "").toUpperCase();
   const initialFilter = requested === "PT" ? "PT" : "GYM";
 
+  const parsedBranchId = Number(branch);
+  const initialBranchId =
+    Number.isFinite(parsedBranchId) && branches.some((b) => b.branchId === parsedBranchId)
+      ? parsedBranchId
+      : null;
+
   return (
     <>
       <section className="border-b border-line bg-white">
@@ -43,33 +49,41 @@ export default async function PackagesPage({
             title="Chọn gói tập phù hợp với bạn"
             description="Tất cả gói đều bao gồm tủ đồ, nước uống và lớp nhóm. Cam kết giá niêm yết — không phát sinh."
           />
-          <div className="mt-6 flex flex-wrap gap-2 text-[12px] text-ink/50">
-            <span className="chip bg-emerald-50 text-emerald-700 ring-emerald-200">Đang ưu đãi: tặng 2 tháng</span>
-            <span className="chip bg-white text-ink/60 ring-line">{branches.length} chi nhánh áp dụng</span>
-            <span className="chip bg-white text-ink/60 ring-line">Hỗ trợ trả góp 0% (demo)</span>
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-ink/55">
+            <span className="inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-brand" /> Đang ưu đãi: tặng 2 tháng
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-brand" /> {branches.length} chi nhánh áp dụng
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-brand" /> Giá niêm yết, không phí ẩn
+            </span>
           </div>
         </div>
       </section>
 
       <section className="container-page py-10 sm:py-14">
         <PackageGrid
-          key={initialFilter}
+          key={`${initialFilter}-${initialBranchId ?? "all"}`}
           packages={packages}
+          branches={branches}
           trainers={trainers}
           ptPackageId={ptPackage?.packageId ?? null}
           ptSessionCount={ptPackage?.sessionCount ?? null}
           initialFilter={initialFilter}
+          initialBranchId={initialBranchId}
         />
       </section>
 
       <section className="container-page pb-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {NOTES.map((n) => (
-            <div key={n.title} className="card p-5">
+            <div key={n.title}>
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand">
                 <n.icon className="h-5 w-5" />
               </span>
-              <p className="mt-4 text-sm font-semibold text-ink">{n.title}</p>
+              <p className="mt-3 text-sm font-semibold text-ink">{n.title}</p>
               <p className="mt-1 text-[12.5px] leading-relaxed text-ink/55">{n.desc}</p>
             </div>
           ))}
