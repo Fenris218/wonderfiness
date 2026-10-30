@@ -30,12 +30,12 @@ fi
 # Đồng bộ thay đổi dữ liệu cho DB đã có sẵn (giá PT theo HLV, mapUrl chi nhánh...)
 node scripts/backfill-features.mjs || echo "⚠ Backfill dữ liệu thất bại, bỏ qua"
 
-echo "▸ Khởi động web tại cổng ${PORT:-3000}"
+echo "▸ Khởi động web tại cổng ${PORT:-8080}"
 if [ -n "${LAN_IP:-}" ]; then
-  echo "▸ Truy cập từ điện thoại (cùng Wi-Fi): http://${LAN_IP}:3000"
+  echo "▸ Truy cập từ điện thoại (cùng Wi-Fi): http://${LAN_IP}:8080"
   echo "▸ Quét QR bằng camera (HTTPS tự ký):   https://${LAN_IP}:3443"
 else
-  echo "▸ Dòng 'Network: http://172.x.x.x:3000' của Next.js là IP nội bộ container."
+  echo "▸ Dòng 'Network: http://172.x.x.x:8080' của Next.js là IP nội bộ container."
   echo "  Chạy scripts/docker-up.ps1 để tự dò IP Wi-Fi và in đúng địa chỉ truy cập."
 fi
 exec npm start

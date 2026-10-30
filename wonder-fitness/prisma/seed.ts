@@ -23,7 +23,7 @@ function dateOnly(date: Date) {
 }
 
 const CUSTOMER_NAMES = [
-  "Nguyễn Đình Duy",
+  "Nguyễn Thanh Thảo",
   "Huỳnh Lê Khánh Huyền",
   "Trần Minh Anh",
   "Lê Quốc Bảo",
@@ -127,7 +127,7 @@ async function main() {
   const staffUser = await prisma.userAccount.create({ data: { email: "staff@wonder.vn", phone: "0905000002", passwordHash: hash, role: "STAFF" } });
   const staff = await prisma.staff.create({ data: { userId: staffUser.userId, branchId: branches[0].branchId, fullName: "Nguyễn Thị Lễ Tân" } });
 
-  const customerUser = await prisma.userAccount.create({ data: { email: "khach@wonder.vn", phone: "0905123456", passwordHash: hash, role: "CUSTOMER" } });
+  const customerUser = await prisma.userAccount.create({ data: { email: "tn28032005@gmail.com", phone: "0905123456", passwordHash: hash, role: "CUSTOMER", emailVerifiedAt: now } });
   const customer = await prisma.customer.create({
     data: { userId: customerUser.userId, fullName: CUSTOMER_NAMES[0], gender: "MALE", dateOfBirth: new Date("1994-03-18"), consentAt: addDays(now, -30), consentVersion: "2026-01" },
   });
@@ -155,8 +155,18 @@ async function main() {
     const member = members[i];
     const pkg = packages[i % 3]; // gym packages
     const start = dateOnly(addDays(now, -60 + i * 3));
-    // A few members expire in 5-9 days for the renewal demo
-    const end = i < 4 ? dateOnly(addDays(now, 5 + i)) : dateOnly(addMonths(start, pkg.durationMonths + pkg.bonusMonths));
+
+    const customExpiryDates = [
+      "2026-11-05",
+      "2026-11-05",
+      "2026-11-05",
+      "2026-11-20",
+      "2026-11-30",
+    ];
+
+    const end = i < customExpiryDates.length
+      ? dateOnly(new Date(`${customExpiryDates[i]}T00:00:00`))
+      : dateOnly(addMonths(start, pkg.durationMonths + pkg.bonusMonths));
     const createdAt = addDays(now, -70 + i * 3);
 
     const order = await prisma.registrationOrder.create({
